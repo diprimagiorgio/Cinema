@@ -1,4 +1,4 @@
-from sqlalchemy import Table, Column, Integer, String, Float
+from sqlalchemy import Table, Column, Integer, String, Float, DateTime
 from app import metadata, engine
 #--------tabella
 users = Table( 'users', metadata,
@@ -23,6 +23,17 @@ genreMovie = Table('genreMovie', metadata,
 genre = Table('genre', metadata,
                Column('id', Integer, primary_key = True),
                Column('description', String))
+
+programming = Table('programming', metadata,
+  Column('date/time',DateTime),
+  Column('price', Float),
+  Column('theater', Integer, ForeignKey('id.theater')),
+  Column('id', Integer, primary_key = True),
+  Column('idMovie',Integer, ForeignKey('id.movie')),
+  Column('viewername', String),
+  Column('viewerage', String),
+  Column('numberseat', Integer, nullable = False),
+  Column('clientUsername',String, Foreignkey('id.client'))
 
 
 metadata.create_all(engine)
