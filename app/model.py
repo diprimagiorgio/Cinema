@@ -1,29 +1,59 @@
-from sqlalchemy import Table, Column, Integer, String, Float
+from sqlalchemy import Table, Column, Integer, String, Float, Date, ForeignKey, CheckConstraint, DateTime
 from app import metadata, engine
 #--------tabella
 users = Table( 'users', metadata,
-    Column('id', Integer, primary_key = True, autoincrement=True),
-    Column('name', String),
-    Column('email', String, unique = True),
-    Column('password', String)
-)
-theater = Table('theater', metadata,
-             Column('id', Integer, primary_key = True),
-             Column('placesAvailable', Integer, nullable = False))
+            Column('id', Integer , primary_key = True, autoincrement=True),
+            Column('name', String),
+            Column('surname', String),
+            Column('email', String, unique = True, nullable = False),
+            Column('password', String)
+        )
 
-movie = Table('movie', metadata,
+clients = Table( 'clients', metadata,
+                Column('id', None , ForeignKey('users.id'), primary_key = True),
+                Column('credit', Float),
+                Column('birthDate', Date)#, CheckConstraint( (date.today() - 'birthDate').days > 0 )),
+            )
+
+managers = Table('managers', metadata,
+                Column('id', None , ForeignKey('users.id'), primary_key = True),
+                Column('admin', Float, nullable = False),
+                Column('financialReport', Float)
+            )
+
+theaters = Table('theaters', metadata,
+             Column('id', Integer, primary_key = True),
+             Column('placesAvailable', Integer, nullable = False)
+            )
+
+movies = Table('movies', metadata,
+             Column('id', Integer, primary_key = True), 
              Column('title', String),
              Column('minimumAge', Integer, default = 0),
              Column('duration', Float, nullable = False),
-             Column('id', Integer))
 
-genreMovie = Table('genreMovie', metadata,
-                   Column('idMovie', None, primary_key = True, ForeignKey('movie.id')),
-                   Column('idGenre', None, primary_key = True, ForeignKey('genre.id')))
-genre = Table('genre', metadata,
+            )
+
+genreMovies = Table('genreMovies', metadata,
+                   Column('idMovie', None, ForeignKey('movies.id'), primary_key = True),
+                   Column('idGenre', None, ForeignKey('genres.id'), primary_key = True)
+                )
+
+genres = Table('genres', metadata,
                Column('id', Integer, primary_key = True),
-               Column('description', String))
+               Column('description', String)
+            )
 
-
+programming = Table('programming', metadata,
+                Column('dateTime',DateTime),
+                Column('price', Float),
+                Column('theater', None, ForeignKey('theaters.id')),
+                Column('id', Integer, primary_key = True),
+                Column('idMovie',None, ForeignKey('movies.id')),
+                Column('viewerName', String),
+                Column('viewerAge', String),
+                Column('numberOfSeat', Integer, nullable = False),
+                Column('clientUsername',None, ForeignKey('clients.id'))
+              )
 metadata.create_all(engine)
 #----------fine tabella
