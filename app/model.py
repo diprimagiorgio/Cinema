@@ -44,6 +44,16 @@ genres = Table('genres', metadata,
                Column('description', String)
             )
 
+programming = Table('programming', metadata,
                 Column('dateTime',DateTime),
+                Column('price', Float),
+                Column('theater', None, ForeignKey('theaters.id')),
+                Column('id', Integer, primary_key = True),
+                Column('idMovie',None, ForeignKey('movies.id')),
+                Column('viewerName', String),
+                Column('viewerAge', String),
+                Column('numberOfSeat', Integer, nullable = False),
+                Column('clientUsername',None, ForeignKey('clients.id'))
+              )
 metadata.create_all(engine)
 #----------fine tabella
