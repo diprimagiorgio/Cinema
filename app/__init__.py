@@ -1,14 +1,20 @@
 from flask import Flask
 import sqlalchemy
+import psycopg2
+
 from sqlalchemy import *
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'prova' #is used to keep the client-side session secure
 
-#utlizzo l'interfaccia core e la modalità di utilizzo expression language
-engine = create_engine('postgresql:///cinemaIlMolo')
+
+#I'm using core and expression language
+
+engine = create_engine('postgresql://admin:secret@localhost/cinemaIlMolo')
 metadata = MetaData ()
-from GioFigo import login
-from GioFigo import routes
+
+
+from app import login
+from app import routes
 
 

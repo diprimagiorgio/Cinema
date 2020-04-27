@@ -2,16 +2,16 @@ from flask import redirect, render_template, request, make_response, url_for
 from flask_login import LoginManager, UserMixin, current_user, login_required, login_user, logout_user
 from sqlalchemy import *
 
-from GioFigo.model import users             #circular input
-from GioFigo import app, engine
-from GioFigo.login import User
+from app.model import users             #circular input
+from app import app, engine
+from app.login import User
 
-#utlizzo l'interfaccia core e la modalità di utilizzo expression language
-
-
+#utlizzo l'interfaccia core e la modalita di utilizzo expression language
 
 
-#TODO cercare di capire come fare, per tipo io vorrei login prima stampare la pagina e poi ricevere i dat è bello o brutto
+
+
+#TODO cercare di capire come fare, per tipo io vorrei login prima stampare la pagina e poi ricevere i dat e bello o brutto
 
 
 

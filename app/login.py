@@ -1,7 +1,7 @@
 from flask_login import LoginManager, UserMixin, current_user, login_required, login_user, logout_user
-from GioFigo import app, engine
+from app import app, engine
 from sqlalchemy import *
-from GioFigo.model import users
+from app.model import users
 
 #configurazione flask_login
 login_manager = LoginManager()

@@ -1,5 +1,5 @@
 from sqlalchemy import Table, Column,  Integer, String
-from GioFigo import metadata, engine
+from app import metadata, engine
 #--------tabella
 users = Table( 'users', metadata,
     Column('id', Integer, primary_key = True, autoincrement=True),
