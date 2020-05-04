@@ -1,10 +1,10 @@
-from flask import redirect, render_template, request, make_response, url_for
-from flask_login import LoginManager, UserMixin, current_user, login_required, login_user, logout_user
+from flask import redirect, render_template, request, make_response, url_for, flash
+from flask_login import LoginManager, UserMixin, current_user, login_user, logout_user
 from sqlalchemy import *
 
-from app.model import users             #circular input
+from app.model import users, clients, managers           #circular input
 from app import app, engine
-from app.login import User
+from app.login import User, Role, login_required
 
 #utlizzo l'interfaccia core e la modalita di utilizzo expression language
 
@@ -27,7 +27,7 @@ def singIn():
     return render_template("register.html")
 
 @app.route('/logout')
-@login_required
+@login_required()
 def logout():
     logout_user()
     return redirect(url_for('index'))
@@ -47,7 +47,7 @@ def register():
     return redirect("/")
 
 @app.route("/registred")
-@login_required
+@login_required()
 def registrants():
     conn = engine.connect()
     s = select([users])
@@ -55,49 +55,39 @@ def registrants():
     resp = make_response(render_template("registred.html", students = result))
     conn.close()
     return resp
-@app.route("/login")
-def login():
+
+
+
+@app.route("/loginClient", methods=['POST', 'GET'])
+def loginAttempt1():
+    if(request.method == 'POST'):
+        email = request.form.get("email");
+        password = request.form.get("password")
+        conn = engine.connect()
+        join = users.join(clients, users.c.id == clients.c.id)
+        query = select([users]).select_from(join).where(and_(users.c.email == email, users.c.password == password))
+        user = conn.execute(query).fetchone()            #ritorna none se non contiene nessuna riga
+        conn.close()  
+        if user:
+            login_user(User(user.id, Role.C))
+            return render_template("success.html")
+        flash('Email o password errate riprovare!')#con questo metodo scrivo un messaggio di errore nel html
     return render_template("login.html")
 
 
 
-def load_user_temp(user_id):
-    conn = engine.connect()
-    s = select([users]).where(
-        and_( users.c.id == user_id )
-        )
-    result = conn.execute(s).fetchone()
-    conn.close()
-    return User(result.id, result.name, result.email, result.password)
-
-
-
-
-
-
-
-
-
-
-@app.route("/loginAttempt", methods=['POST'])
-def loginAttempt():
-    email = request.form.get("name");
-    password = request.form.get("password")
-    if not email or not password:
-        return render_template("failure.html", message = "Dati mancanti" + email + password)
-    conn = engine.connect()
-    s = select([users]).where(
-        and_( users.c.email == email,
-            users.c.password == password)
-        )
-    result = conn.execute(s).fetchone()            #ritorna none se non contirnr nessuna riga
-    #TODO PROVARE CON IL COSTRUTTO DEL PROF OSSIA FETCH ONE -> io ho usato first
-    conn.close()
-    if not result:
-        return render_template("failure.html", message = "password o email non corretti")
-    else:
-        user = load_user_temp(result['id'])              #dovrebbe andare anche con result.id
-        login_user(user)
-        return render_template("success.html", student = result)
-
-
+@app.route("/loginManager", methods=['POST', 'GET'])
+def loginAttempt2():
+    if(request.method == 'POST'):
+        email = request.form.get("email");
+        password = request.form.get("password")
+        conn = engine.connect()
+        join = users.join(managers, users.c.id == managers.c.id)
+        query = select([users]).select_from(join).where(and_(users.c.email == email, users.c.password == password))
+        user = conn.execute(query).fetchone()            #ritorna none se non contiene nessuna riga
+        conn.close()
+        if user:
+            login_user(User(user.id, Role.M))
+            return render_template("success.html")
+        flash('Email o password errate riprovare!')#con questo metodo scrivo un messaggio di errore nel html
+    return render_template("loginManager.html")
