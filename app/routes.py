@@ -2,10 +2,10 @@ from flask import redirect, render_template, request, make_response, url_for, fl
 from sqlalchemy import insert, select, join, delete
 from flask_login import LoginManager, UserMixin, current_user, login_user, logout_user
 
-from app.model import users, clients, managers           #circular input
-from app.model import users,movies,genres,movieSchedule, theaters          #circular input
+
+from app.model import users,movies,genres,movieSchedule, theaters, clients, managers
 from app import app, engine
-from app.login import User, Role, login_required
+from app.login import User, Role, login_required, login_manager
 
 #utlizzo l'interfaccia core e la modalita di utilizzo expression language
 #TODO cercare di capire come fare, per tipo io vorrei login prima stampare la pagina e poi ricevere i dat e bello o brutto
@@ -51,11 +51,11 @@ def registrants():
     return resp
 
 
-
+#giosuè
 @app.route("/loginClient", methods=['POST', 'GET'])
 def loginAttempt1():
     if(request.method == 'POST'):
-        email = request.form.get("email");
+        email = request.form.get("email")
         password = request.form.get("password")
         conn = engine.connect()
         join = users.join(clients, users.c.id == clients.c.id)
@@ -69,11 +69,11 @@ def loginAttempt1():
     return render_template("login.html")
 
 
-
+#giosuè
 @app.route("/loginManager", methods=['POST', 'GET'])
 def loginAttempt2():
     if(request.method == 'POST'):
-        email = request.form.get("email");
+        email = request.form.get("email")
         password = request.form.get("password")
         conn = engine.connect()
         join = users.join(managers, users.c.id == managers.c.id)
@@ -85,27 +85,6 @@ def loginAttempt2():
             return render_template("success.html")
         flash('Email o password errate riprovare!')#con questo metodo scrivo un messaggio di errore nel html
     return render_template("loginManager.html")
-
-@app.route("/loginAttempt", methods=['POST'])
-def loginAttempt():
-    email = request.form.get("name")
-    password = request.form.get("password")
-    if not email or not password:
-        return render_template("failure.html", message = "Dati mancanti" + email + password)
-    conn = engine.connect()
-    s = select([users]).where(
-        and_( users.c.email == email,
-            users.c.password == password)
-        )
-    result = conn.execute(s).fetchone()            #ritorna none se non contirnr nessuna riga
-    #TODO PROVARE CON IL COSTRUTTO DEL PROF OSSIA FETCH ONE -> io ho usato first
-    conn.close()
-    if not result:
-        return render_template("failure.html", message = "password o email non corretti")
-    else:
-        user = load_user_temp(result['id'])              #dovrebbe andare anche con result.id
-        login_user(user)
-        return render_template("success.html", student = result)
 
 
 #------------------------Shared function-----------------------#
@@ -168,7 +147,7 @@ def listMovies():
         ])
     return queryAndTemplate(s, "listMovies.html")
 
-
+#devo verificare che non
 @app.route("/insertMovie", methods=['GET','POST'])
 def insertMovie():
     if request.method == 'POST':
@@ -217,7 +196,7 @@ def insertTheater():
         if capacity and id and not theaterIsPresent(id):                     #verifico che mi abbiano passato i parametri e che non siano già registrate sale con lo stesso id
             ins = theaters.insert().values(id = id, seatsCapacity=capacity)
             flash("Theater insert with success!",'info' )
-            return queryAndFun(ins, 'listTheater')
+            return queryAndFun(ins, 'listTheaters')
         else:
             if not capacity or not id:
                 flash("Dati mancanti",'error')
@@ -231,7 +210,7 @@ def theaterIsPresent(id):                                                   #ver
     result = conn.execute(s).fetchone()
     conn.close()
     return True if result else False 
-
+#prima di cancellare devo verificare che non ci siano spettacoli in quella sala
 @app.route("/removeTheater", methods=['GET', 'POST'])
 def removeTheater():
     if request.method == 'POST':
@@ -240,7 +219,7 @@ def removeTheater():
             rem = theaters.delete().\
                 where(theaters.c.id == id)
             flash('The theater {} has been removed with success'.format(id), 'info')
-            return queryAndFun(rem, 'listTheater')
+            return queryAndFun(rem, 'listTheaters')
         else:
             flash('You have to insert the value to remove', 'error')
     s = select([theaters])    
