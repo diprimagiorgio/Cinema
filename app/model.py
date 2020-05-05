@@ -27,25 +27,26 @@ theaters = Table('theaters', metadata,
             )
 
 movies = Table('movies', metadata,
-             Column('id', Integer, primary_key = True), 
+             Column('id', Integer, primary_key = True, autoincrement=True), 
              Column('title', String),#not null
              Column('minimumAge', Integer, default = 0),#CHECK >=0
              Column('duration', Float, nullable = False),#CHECK >=0
+             Column('idGenre', None, ForeignKey('genres.id'))
 
             )
 
-genreMovies = Table('genreMovies', metadata,
-                   Column('idMovie', None, ForeignKey('movies.id'), primary_key = True),
-                   Column('idGenre', None, ForeignKey('genres.id'), primary_key = True)
-                )
+#genreMovies = Table('genreMovies', metadata,
+#                   Column('idMovie', None, ForeignKey('movies.id'), primary_key = True),
+#                   Column('idGenre', None, ForeignKey('genres.id'), primary_key = True)
+#                )
 
 genres = Table('genres', metadata,
-               Column('id', Integer, primary_key = True),
+               Column('id', Integer, primary_key = True, autoincrement=True),
                Column('description', String)#NOT NULL
             )
 
-movieShedule = Table('movieShedule', metadata,        #RIPENSARE NOME DELLA TABELLA 
-                Column('id', Integer, primary_key = True),
+movieSchedule = Table('movieSchedule', metadata,        #RIPENSARE NOME DELLA TABELLA 
+                Column('id', Integer, primary_key = True, autoincrement=True),
                 Column('dateTime',DateTime),#NOT NULL
                 Column('price', Float),#NOT NULL >=0
                 Column('idMovie',None, ForeignKey('movies.id'), nullable = False),

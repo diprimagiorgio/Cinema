@@ -11,7 +11,7 @@
 </head>
 <body>
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <a class="navbar-brand mt-3 mb-3" href="/"><b>Giorgio Figo</b></a>
+    <a class="navbar-brand mt-3 mb-3" href="/"><b>Il Molo</b></a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarColor01" aria-controls="navbarColor01" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
@@ -36,6 +36,30 @@
       </ul>
     </div>
   </nav>
+    {% with errors = get_flashed_messages(category_filter=["error"]) %}
+      {% if errors %}
+      <div class="alert alert-danger h-100" role="alert">
+        <ul>
+          {%- for msg in errors %}
+          <li>{{ msg }}</li>
+          {% endfor -%}
+        </ul>
+      </div>
+      {% endif %}
+    {% endwith %}
+    {% with info = get_flashed_messages(category_filter=["info"]) %}
+      {% if info %}
+      <div class="alert alert-success" role="alert">
+        <ul>
+          {%- for msg in info %}
+          <li>{{ msg }}</li>
+          {% endfor -%}
+        </ul>
+      </div>
+      {% endif %}
+    {% endwith %}
+    
+    
     {% block body%} {% endblock%}
 </body>
 </html>
