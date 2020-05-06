@@ -6,7 +6,8 @@
             <thead>
                 <tr>
                   <th scope="col">#</th>
-                  <th scope="col">Studente</th>
+                  <th scope="col">Id</th>
+                  <th scope="col">User</th>
                   <th scope="col">Email</th>
                   <th scope="col">Password</th>
                 </tr>
@@ -16,6 +17,7 @@
                 {% for stu  in students %}
                     <tr>
                         <th scope="row">{{ loop.index0 + 1 }}</th>
+                        <td>{{ stu['id'] }}</td>
                         <td>{{ stu['name'] }}</td>
                         <td>{{ stu['email'] }}</td>
                         <td>{{ stu['password'] }}</td>

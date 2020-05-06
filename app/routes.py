@@ -2,7 +2,7 @@ from flask import redirect, render_template, request, make_response, url_for
 from flask_login import LoginManager, UserMixin, current_user, login_required, login_user, logout_user
 from sqlalchemy import *
 
-from app.model import users             #circular input
+from app.model import users, clients, managers, theaters, movies, genreMovies, genres, movieShedule, booking         #circular input
 from app import app, engine
 from app.login import User
 
@@ -36,14 +36,24 @@ def logout():
 @app.route('/register', methods =['POST'] )
 def register():
     name = request.form.get("name")
+    surname = request.form.get("surname")
     email = request.form.get("email")
     password = request.form.get("password")
-    if not name or not email or not password:
+    birthdate = request.form.get("birthdate")
+    if not name or not email or not password or not birthdate or not surname :
         return render_template("failure.html",message =  "Devi inserire tutti i dati")
     conn = engine.connect()
-    ins = users.insert().values( name=name, email = email, password = password)
+    ins = users.insert(None).values(name=name, surname = surname, email = email, password = password)    
     conn.execute(ins)
     conn.close()
+    
+    conn = engine.connect()
+    query = select([users]).where(users.columns.email == email)
+    ris = conn.execute(query).fetchone()
+    insclients= clients.insert(None).values(id = ris.id, birthDate = birthdate, credit=0.)
+    conn.execute(insclients)
+    conn.close()
+    
     return redirect("/")
 
 @app.route("/registred")
@@ -70,6 +80,32 @@ def load_user_temp(user_id):
     conn.close()
     return User(result.id, result.name, result.email, result.password)
 
+@app.route("/account_info")
+def account_info() :
+    conn = engine.connect()
+    s = select([clients])
+    result = conn.execute(s)
+    resp = make_response(render_template("account_info.html", students = result))
+    conn.close()
+    return resp
+
+@app.route("/updatecredit1")
+@login_required#richiede utente loggato
+def change():
+    return render_template("updatecredit.html")
+
+@app.route("/updatecredit2",methods = ['POST'])###non funzia
+def change1():
+    money = request.form.get("import")
+    conn = engine.connect()
+    base = select([clients]).where(clients.columns.id == current_user.get_id())
+    ris = conn.execute(base).fetchone()
+    query = clients.update().values(credit = float(money) + float(ris.credit)).where(clients.columns.id == current_user.get_id())
+    conn.execute(query)
+    conn.close()
+    return render_template("login.html")
+    
+
 
 
 
@@ -81,7 +117,7 @@ def load_user_temp(user_id):
 
 @app.route("/loginAttempt", methods=['POST'])
 def loginAttempt():
-    email = request.form.get("name");
+    email = request.form.get("name")
     password = request.form.get("password")
     if not email or not password:
         return render_template("failure.html", message = "Dati mancanti" + email + password)
