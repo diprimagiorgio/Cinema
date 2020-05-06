@@ -1,4 +1,4 @@
-from sqlalchemy import Table, Column, Integer, String, Float, Date, ForeignKey, CheckConstraint, DateTime
+from sqlalchemy import Table, Column, Integer, String, Float, Date, Boolean, ForeignKey, CheckConstraint, DateTime
 from app import metadata, engine
 #--------tabella
 users = Table( 'users', metadata,
@@ -17,7 +17,7 @@ clients = Table( 'clients', metadata,
 
 managers = Table('managers', metadata,
                 Column('id', None , ForeignKey('users.id'), primary_key = True),
-                Column('admin', Float, nullable = False),
+                Column('admin', Boolean, nullable = False),
                 Column('financialReport', Float)#>=0 not null
             )
 

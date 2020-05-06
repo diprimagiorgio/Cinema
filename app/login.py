@@ -32,6 +32,7 @@ class User(UserMixin):              #in questo modo indico che estende la classe
     
 #---------FineClasse
 #---------Classe per il ruolo
+#Giosuè Zannini
 class Role(Enum):
     C = 'CLIENT'
     M = 'MANAGER'
@@ -40,6 +41,7 @@ class Role(Enum):
 
 
 #-----callBack con il compito di trasformare un ID in un istanza della classe
+#Giosuè Zannini
 @login_manager.user_loader
 def load_user(user_id):
     conn = engine.connect()
@@ -60,6 +62,7 @@ def load_user(user_id):
 #------------------------------------------OVERRIDE
 #utilizzo:  quando si usa il decoratore se non si mette dentro parentesi nulla possono accedere tutti 
 #           gli utenti loggati, invece se si specifica un ruolo può accedere solo quel ruolo in specifico
+#Giosuè Zannini
 def login_required(role='ANY'):
     def wrapper(func):
         @wraps(func)

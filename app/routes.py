@@ -1,9 +1,9 @@
 from flask import redirect, render_template, request, make_response, url_for, flash
-from sqlalchemy import insert, select, join, delete , and_
+from sqlalchemy import insert, select, join, delete, and_
 from flask_login import LoginManager, UserMixin, current_user, login_user, logout_user
 
 
-from app.model import users,movies,genres,movieSchedule, theaters, clients, managers
+from app.model import users, movies, genres, movieSchedule, theaters, clients, managers
 from app import app, engine
 from app.login import User, Role, login_required, login_manager
 
@@ -60,11 +60,10 @@ def account_info() :
     return resp
 
 
-
-#giosuè
+#Giosuè Zannini
 @app.route("/loginClient", methods=['POST', 'GET'])
 def loginAttempt1():
-    if(request.method == 'POST'):
+    if request.method == 'POST':
         email = request.form.get("email")
         password = request.form.get("password")
         conn = engine.connect()
@@ -74,8 +73,8 @@ def loginAttempt1():
         conn.close()  
         if user:
             login_user(User(user.id, Role.C))
-            return render_template("success.html")
-        flash('Email o password errate riprovare!')#con questo metodo scrivo un messaggio di errore nel html
+            return render_template("success.html")#------------------------------------------------------------CAMBIARE RITORNO
+        flash('Email o password errate riprovare!', 'error')#con questo metodo scrivo un messaggio di errore nel html
     return render_template("login.html")
 #luca
 @app.route("/updatecredit1")
@@ -94,12 +93,10 @@ def change1():
     conn.close()
     return render_template("login.html")
 
-
-
-#giosuè
+#Giosuè Zannini
 @app.route("/loginManager", methods=['POST', 'GET'])
 def loginAttempt2():
-    if(request.method == 'POST'):
+    if request.method == 'POST':
         email = request.form.get("email")
         password = request.form.get("password")
         conn = engine.connect()
@@ -109,8 +106,8 @@ def loginAttempt2():
         conn.close()
         if user:
             login_user(User(user.id, Role.M))
-            return render_template("success.html")
-        flash('Email o password errate riprovare!')#con questo metodo scrivo un messaggio di errore nel html
+            return render_template("success.html")#------------------------------------------------------------CAMBIARE RITORNO
+        flash('Email o password errate riprovare!', 'error')#con questo metodo scrivo un messaggio di errore nel html
     return render_template("loginManager.html")
 
 
