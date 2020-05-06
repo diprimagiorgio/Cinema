@@ -1,5 +1,5 @@
 from flask import redirect, render_template, request, make_response, url_for, flash
-from sqlalchemy import insert, select, join, delete
+from sqlalchemy import insert, select, join, delete , and_
 from flask_login import LoginManager, UserMixin, current_user, login_user, logout_user
 
 
@@ -13,7 +13,7 @@ from app.login import User, Role, login_required, login_manager
 @app.route('/')
 def index():
     if current_user.is_authenticated:
-        return redirect(url_for('registrants'))         #chiamo la funzione invece del file
+        return redirect(url_for('account_info'))         #chiamo la funzione invece del file
     return render_template("login.html")
 
 @app.route('/signIn')
@@ -26,7 +26,7 @@ def logout():
     logout_user()
     return redirect(url_for('index'))
 
-
+#luca
 @app.route('/register', methods =['POST'] )
 def register():
     name = request.form.get("name")
@@ -49,16 +49,16 @@ def register():
     conn.close()
     
     return redirect("/")
-
-@app.route("/registred")
-@login_required()
-def registrants():
+#luca
+@app.route("/account_info")
+def account_info() :
     conn = engine.connect()
-    s = select([users])
+    s = select([clients])
     result = conn.execute(s)
-    resp = make_response(render_template("registred.html", students = result))
+    resp = make_response(render_template("account_info.html", students = result))
     conn.close()
     return resp
+
 
 
 #giosuè
@@ -77,6 +77,23 @@ def loginAttempt1():
             return render_template("success.html")
         flash('Email o password errate riprovare!')#con questo metodo scrivo un messaggio di errore nel html
     return render_template("login.html")
+#luca
+@app.route("/updatecredit1")
+@login_required()#richiede utente loggato
+def change():
+    return render_template("updatecredit.html")
+
+@app.route("/updatecredit2",methods = ['POST'])
+def change1():
+    money = request.form.get("import")
+    conn = engine.connect()
+    base = select([clients]).where(clients.columns.id == current_user.get_id())
+    ris = conn.execute(base).fetchone()
+    query = clients.update().values(credit = float(money) + float(ris.credit)).where(clients.columns.id == current_user.get_id())
+    conn.execute(query)
+    conn.close()
+    return render_template("login.html")
+
 
 
 #giosuè
@@ -121,14 +138,6 @@ def listShowTime():
             join(genres, genres.c.id == movies.c.idGenre)
         ])
     return queryAndTemplate(s, "listShowTime.html")
-@app.route("/account_info")
-def account_info() :
-    conn = engine.connect()
-    s = select([clients])
-    result = conn.execute(s)
-    resp = make_response(render_template("account_info.html", students = result))
-    conn.close()
-    return resp
 
 @app.route("/insertShowTime",  methods=['GET','POST'])
 def insertShowTime():
@@ -164,21 +173,6 @@ def listMovies():
             join(genres, genres.c.id == movies.c.idGenre)
         ])
     return queryAndTemplate(s, "listMovies.html")
-@app.route("/updatecredit1")
-@login_required#richiede utente loggato
-def change():
-    return render_template("updatecredit.html")
-
-@app.route("/updatecredit2",methods = ['POST'])###non funzia
-def change1():
-    money = request.form.get("import")
-    conn = engine.connect()
-    base = select([clients]).where(clients.columns.id == current_user.get_id())
-    ris = conn.execute(base).fetchone()
-    query = clients.update().values(credit = float(money) + float(ris.credit)).where(clients.columns.id == current_user.get_id())
-    conn.execute(query)
-    conn.close()
-    return render_template("login.html")
     
 
 #ho deciso di fare il controllo se il film è nel db o meno. Anche se non è nel db io segnalo che l'ho tolto. Ma non rombo l'integrità del db
