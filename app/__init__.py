@@ -2,7 +2,7 @@ from flask import Flask
 import sqlalchemy
 import psycopg2
 
-from sqlalchemy import *
+from sqlalchemy import create_engine, MetaData
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'prova' #is used to keep the client-side session secure

@@ -1,0 +1,22 @@
+{% extends "layout.html" %}
+
+{% block body %}
+<div class="container mt-5">
+  <h2>Rimuovi film</h2>
+  <form action="/removeMovie" method="POST">
+
+    <div class="form-group mt-2">
+      <label>Film</label>
+      <select class="custom-select" name="id">
+        <option selected>Seleziona...</option>
+        {% for movie in result%}
+          <option value= {{ movie['id'] }} >id[ {{ movie['id']}} ] titolo[{{ movie['title']}}]</option>
+        {% endfor %}
+      </select>
+    </div>    
+
+    <button type="submit" class="btn btn-primary">Invia</button>
+  </form>
+</div>
+
+{% endblock %}
