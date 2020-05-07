@@ -1,7 +1,8 @@
 from flask_login import LoginManager, UserMixin, current_user
+
 from app import app, engine
 
-from enum import Enum
+from enum import IntEnum
 
 from sqlalchemy import select
 
@@ -9,9 +10,7 @@ from app.model import users, clients, managers
 
 from functools import wraps
 
-from flask import current_app
-
-
+from flask import redirect, flash
 
 
 
@@ -20,7 +19,8 @@ from flask import current_app
 #configurazione flask_login
 login_manager = LoginManager()
 login_manager.init_app(app)
-#flask login ha bisogno di tre cose
+
+
 
 
 #---------classePerLogin
@@ -31,11 +31,13 @@ class User(UserMixin):              #in questo modo indico che estende la classe
         self.role = role
     
 #---------FineClasse
+
 #---------Classe per il ruolo
 #Giosuè Zannini
-class Role(Enum):
-    C = 'CLIENT'
-    M = 'MANAGER'
+class Role(IntEnum):
+    CLIENT = 0
+    SUPERVISOR = 1
+    ADMIN = 2
     
 
 
@@ -45,15 +47,20 @@ class Role(Enum):
 @login_manager.user_loader
 def load_user(user_id):
     conn = engine.connect()
-    join = users.join(clients, users.c.id == clients.c.id)
-    query = select([users]).select_from(join).where(users.c.id == user_id)
+    query = select([users]).\
+            select_from(users.join(clients)).\
+            where(users.c.id == user_id)
     result = conn.execute(query).fetchone()
-    role = Role.C
+    role = Role.CLIENT
     if not result:
-        join = users.join(managers, users.c.id == managers.c.id)
-        query = select([users]).select_from(join).where(users.c.id == user_id)
+        query = select([users, managers.c.admin]).\
+                select_from(users.join(managers)).\
+                where(users.c.id == user_id)
         result = conn.execute(query).fetchone()
-        role = Role.M
+        if result.admin:
+            role = Role.ADMIN
+        else:
+            role = Role.SUPERVISOR
     conn.close()
     return User(result.id, role)
 
@@ -63,20 +70,25 @@ def load_user(user_id):
 #utilizzo:  quando si usa il decoratore se non si mette dentro parentesi nulla possono accedere tutti 
 #           gli utenti loggati, invece se si specifica un ruolo può accedere solo quel ruolo in specifico
 #Giosuè Zannini
-def login_required(role='ANY'):
+def login_required(role = 0):
     def wrapper(func):
         @wraps(func)
         def decorated_view(*args, **kwargs):
-            if current_app.config.get('LOGIN_DISABLED'):
+            if app.config.get('LOGIN_DISABLED'):
                 return func(*args, **kwargs)
-            elif not current_user.is_authenticated or ((current_user.role != role) and (role != "ANY")):
-                return current_app.login_manager.unauthorized()
+            elif not current_user.is_authenticated or current_user.role < role:
+                return app.login_manager.unauthorized()
             return func(*args, **kwargs)
         return decorated_view
     return wrapper
 
 
-
+#-----------------------------------------GESTISCE LA PAGINA DI RITORNO IN CASO DI ACCESSO NON CONSENTITO A QUALCHE PAGINA
+#Giosuè Zannini
+@app.login_manager.unauthorized_handler
+def unauth_handler():
+    flash('Non sei autorizzato e non so cosa dirti ne dove mandarti', 'error')#------------decidere dove mandarlo
+    return redirect("/")
 
 
 

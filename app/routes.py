@@ -14,7 +14,7 @@ from app.login import User, Role, login_required, login_manager
 def index():
     if current_user.is_authenticated:
         return redirect(url_for('account_info'))         #chiamo la funzione invece del file
-    return render_template("login.html")
+    return render_template("loginClient.html")
 
 @app.route('/signIn')
 def singIn():
@@ -61,21 +61,50 @@ def account_info() :
 
 
 #Giosuè Zannini
+#------------------------Shared function Login-----------------------#
+
+def findUser(table, email, password, sel):
+    conn = engine.connect()
+    query = select(sel).\
+            select_from(users.join(table)).\
+            where(and_(users.c.email == email, users.c.password == password))
+    user = conn.execute(query).fetchone()            #ritorna none se non contiene nessuna riga
+    conn.close()
+    return user
+#--------------------------------------------------------------#
+
+
+#Giosuè Zannini
 @app.route("/loginClient", methods=['POST', 'GET'])
-def loginAttempt1():
+def loginClient():
     if request.method == 'POST':
         email = request.form.get("email")
         password = request.form.get("password")
-        conn = engine.connect()
-        join = users.join(clients, users.c.id == clients.c.id)
-        query = select([users]).select_from(join).where(and_(users.c.email == email, users.c.password == password))
-        user = conn.execute(query).fetchone()            #ritorna none se non contiene nessuna riga
-        conn.close()  
+        user = findUser(clients, email, password, [users])  
         if user:
-            login_user(User(user.id, Role.C))
+            login_user(User(user.id, Role.CLIENT))
             return render_template("success.html")#------------------------------------------------------------CAMBIARE RITORNO
         flash('Email o password errate riprovare!', 'error')#con questo metodo scrivo un messaggio di errore nel html
-    return render_template("login.html")
+    return render_template("loginClient.html")
+
+#Giosuè Zannini
+@app.route("/loginManager", methods=['POST', 'GET'])
+def loginManager():
+    if request.method == 'POST':
+        email = request.form.get("email")
+        password = request.form.get("password")
+        user = findUser(managers, email, password, [users, managers.c.admin])
+        if user:
+            if user.admin:
+                role = Role.ADMIN
+            else:
+                role = Role.SUPERVISOR
+            login_user(User(user.id, role))
+            return render_template("success.html")#------------------------------------------------------------CAMBIARE RITORNO
+        flash('Email o password errate riprovare!', 'error')#con questo metodo scrivo un messaggio di errore nel html
+    return render_template("loginManager.html")
+
+
 #luca
 @app.route("/updatecredit1")
 @login_required()#richiede utente loggato
@@ -93,22 +122,7 @@ def change1():
     conn.close()
     return render_template("login.html")
 
-#Giosuè Zannini
-@app.route("/loginManager", methods=['POST', 'GET'])
-def loginAttempt2():
-    if request.method == 'POST':
-        email = request.form.get("email")
-        password = request.form.get("password")
-        conn = engine.connect()
-        join = users.join(managers, users.c.id == managers.c.id)
-        query = select([users]).select_from(join).where(and_(users.c.email == email, users.c.password == password))
-        user = conn.execute(query).fetchone()            #ritorna none se non contiene nessuna riga
-        conn.close()
-        if user:
-            login_user(User(user.id, Role.M))
-            return render_template("success.html")#------------------------------------------------------------CAMBIARE RITORNO
-        flash('Email o password errate riprovare!', 'error')#con questo metodo scrivo un messaggio di errore nel html
-    return render_template("loginManager.html")
+
 
 
 #------------------------Shared function-----------------------#
