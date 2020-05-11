@@ -59,7 +59,7 @@ booking = Table('booking', metadata,
                 Column('viewerAge', String),#NOT NULL
                 Column('seatNumber', Integer, nullable = False),
                 Column('clientUsername',None, ForeignKey('clients.id'), nullable = False),
-                Column('idmovieSchedule', None, ForeignKey('movieSchedule.id'), nullable = False)
+                Column('idmovieShedule', None, ForeignKey('movieSchedule.id'), nullable = False)
             )
 
 metadata.create_all(engine)
