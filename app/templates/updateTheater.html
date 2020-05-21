@@ -1,0 +1,35 @@
+{% extends "menuTable.html" %}
+
+{% block right%}
+<div class="container mt-5">
+  <h2>Modifica Sala</h2><br>
+  <h5>Seleziona la sala da modificare</h5><br>
+  <form action="/selectTheaterToUpdate" method="POST">
+
+    <table class="table mt-3">
+      <thead>
+          <tr>
+            <th scope="col">Seleziona</th>
+            <th scope="col">Sala</th>
+            <th scope="col">Capienza</th>
+          </tr>
+      </thead>
+
+      <tbody>
+          {% for theater  in result %}
+              <tr>
+                <td align="center">
+                  <input type="radio" name="choosed" value= {{ theater['id'] }} >
+                </td>
+                <td  class="col-2">{{ theater['id'] }}</td>
+                <td  class="col-2">{{ theater['seatsCapacity'] }}</td>
+              </tr>
+          {% endfor %}
+      </tbody>
+  </table>
+    
+    <button type="submit" class="btn btn-primary">Invia</button>
+  </form>
+</div>
+
+{% endblock %}

@@ -1,6 +1,6 @@
-{% extends "layout.html" %}
+{% extends "menuTable.html" %}
 
-{% block body %}
+{% block right%}
 <div class="container mt-5">
   <h2>Rimuovi film</h2>
   <form action="/removeMovie" method="POST">
@@ -14,6 +14,27 @@
         {% endfor %}
       </select>
     </div>    
+
+    <div class="form-group mt-2">
+      <label>Opzioni cancellazione</label>
+      <select class="custom-select" name="option">
+        <option selected>Seleziona...</option>
+          <option value="1" >
+            NON cancellare se ci sono spettacoli collegati a questo film
+          </option>
+          <option value="2" >
+            NON cancellare se ci sono spettacoli programmati  per questo film in FUTURO
+          </option>
+          <option value="3" >
+            Cancella comunque
+          </option>
+      </select>
+    </div>
+
+
+
+
+
 
     <button type="submit" class="btn btn-primary">Invia</button>
   </form>

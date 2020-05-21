@@ -1,0 +1,33 @@
+{% extends "menuTable.html" %}
+
+{% block right%}
+<div class="container mt-5">
+  <h2>Modifica genere cinematografico</h2><br>
+  <h5>Seleziona il genere da modificare</h5><br>
+  <form action="/selectGenreToUpdate" method="POST">
+
+    <table class="table mt-3">
+      <thead>
+          <tr>
+            <th scope="col">Seleziona</th>
+            <th scope="col">Genere</th>
+          </tr>
+      </thead>
+
+      <tbody>
+          {% for genre  in result %}
+              <tr>
+                <td align="center">
+                  <input type="radio" name="choosed" value= {{ genre['id'] }} >
+                </td>
+                <td  class="col-2">{{ genre['description'] }}</td>
+              </tr>
+          {% endfor %}
+      </tbody>
+  </table>
+    
+    <button type="submit" class="btn btn-primary">Invia</button>
+  </form>
+</div>
+
+{% endblock %}

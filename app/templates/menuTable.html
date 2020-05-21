@@ -1,0 +1,60 @@
+{% extends "layout.html" %}
+
+{% block body %}
+<div class="row  mt-4 ml-1">
+    <div class="col-4">
+      <div class="list-group" id="list-tab" role="tablist">
+        
+        <a href="#menuGenres" class="list-group-item" data-toggle="collapse">
+            Generi
+        </a>
+        <div class="collapse pos-absolute" id="menuGenres">
+            <a class="list-group-item list-group-item-action" href="/listGenres">Mostra generi</a>
+            <a class="list-group-item list-group-item-action" href="/insertGenre">Inserisci generi</a>
+            <a class="list-group-item list-group-item-action" href="/removeGenre">Rimuovi generi</a>
+            <a class="list-group-item list-group-item-action" href="/selectGenreToUpdate">Modifica generi</a>
+        </div>
+            
+        
+        <a href="#menuMovies" class="list-group-item" data-toggle="collapse">
+            Film
+        </a>
+        <div class="collapse pos-absolute" id="menuMovies">
+            <a class="list-group-item list-group-item-action" href="/listMovies"> Mostra Film</a>
+            <a class="list-group-item list-group-item-action" href="/insertMovie"> Inserisci Film</a>
+            <a class="list-group-item list-group-item-action" href="/removeMovie">Rimuovi Film</a>
+        </div>
+
+        <a href="#menuShowTime" class="list-group-item" data-toggle="collapse">
+            Proiezioni
+        </a>
+        <div class="collapse pos-absolute" id="menuShowTime">    
+            <a class="list-group-item list-group-item-action" href="/futureShowsTime"> Mostra proiezione future</a>
+            <a class="list-group-item list-group-item-action" href="/pastShowsTime"> Mostra proiezioni passsate</a>
+            <a class="list-group-item list-group-item-action" href="/listShowsTime"> Mostra tutte proiezioni</a>
+            <a class="list-group-item list-group-item-action" href="/insertShowTime"> Inserisci proiezione</a>
+        </div>
+
+        <a href="#menuTheaters" class="list-group-item" data-toggle="collapse">
+            Sale
+        </a>
+        <div class="collapse pos-absolute" id="menuTheaters">  
+            <a class="list-group-item list-group-item-action" href="/listTheaters">Mostra sale</a>
+            <a class="list-group-item list-group-item-action" href="/insertTheater">Inserisci sala</a>
+            <a class="list-group-item list-group-item-action" href="/removeTheater">Rimuovi sala</a>
+            <a class="list-group-item list-group-item-action" href="/selectTheaterToUpdate">Modifica sala</a>
+        </div>    
+
+
+      </div>
+    </div>
+
+
+    <div class="col-8">
+       
+    {% block right%} {% endblock%}
+    </div>
+</div>
+
+
+{% endblock %}

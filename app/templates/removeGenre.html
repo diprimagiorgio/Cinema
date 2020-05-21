@@ -2,15 +2,15 @@
 
 {% block right%}
 <div class="container mt-5">
-  <h2>Rimuovi sala</h2>
-  <form action="/removeTheater" method="POST">
+  <h2>Rimuovi genere cinematografico</h2>
+  <form action="/removeGenre" method="POST">
 
     <div class="form-group mt-2">
-      <label>Sala</label>
-      <select class="custom-select" name="id">
+      <label>Genere</label>
+      <select class="custom-select" name="genre">
         <option selected>Seleziona...</option>
-        {% for theater in result%}
-          <option value= {{ theater['id'] }} >id[{{ theater['id']}}] posti[{{ theater['seatsCapacity']}}]</option>
+        {% for genre in result%}
+          <option value= {{ genre['id'] }} >{{ genre['description']}}</option>
         {% endfor %}
       </select>
     </div>
@@ -20,15 +20,14 @@
       <select class="custom-select" name="option">
         <option selected>Seleziona...</option>
           <option value="1" >
-            Cancella se ci sono SOLO spettacoli collegati già andati in onda
+            Cancella se non ci sono film collegati a questo genere
           </option>
           <option value="2" >
-            Cancella solo se non ci sono spettacoli collegati
+            Cancella in tutti i casi
           </option>
       </select>
     </div>
-
-
+    
     <button type="submit" class="btn btn-primary">Invia</button>
   </form>
 </div>

@@ -59,7 +59,7 @@ def load_user(user_id):
 
 #------------------------------------------OVERRIDE
 #utilizzo:  quando si usa il decoratore se non si mette dentro parentesi nulla possono accedere tutti 
-#           gli utenti loggati, invece se si specifica un ruolo può accedere solo quel ruolo in specifico
+#           gli utenti loggati, invece se si specifica un ruolo puo accedere solo quel ruolo in specifico
 def login_required(role='ANY'):
     def wrapper(func):
         @wraps(func)

@@ -1,8 +1,8 @@
-{% extends "layout.html" %}
+{% extends "menuTable.html" %}
 
-{% block body%}
+{% block right%}
 <div class="container mt-5">
-    <h2>Film in programmazione</h2>
+    <h2>Film in programmazione {{ par[2] }}</h2>
 
         <table class="table mt-4">
             <thead>
@@ -13,6 +13,7 @@
                     <th scope="col">Durata</th>
                     <th scope="col">Età minima</th>
                     <th scope="col">Prezzo bigletto</th>
+                    <th scope="col">Sala</th>
                 </tr>
             </thead>
 
@@ -25,10 +26,13 @@
                         <td>{{ movie['duration'] }}</td>
                         <td>{{ movie['minimumAge'] }}</td>
                         <td>{{ movie['price'] }}</td>
+                        <td>{{ movie['theater'] }}</td>
                     </tr>
                 {% endfor %}
             </tbody>
         </table>
+        <a class="btn btn-primary" href= "{{ par[1] }}" role="button">Programmazione {{ par[0]}}</a>
+
 </div>
 
 

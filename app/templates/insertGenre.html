@@ -1,0 +1,17 @@
+{% extends "menuTable.html" %}
+
+{% block right%}
+<div class="container mt-5">
+  <h2>Inserisci Genere</h2>
+  <form action="/insertGenre" method="POST">
+
+    <div class="form-group mt-2">
+      <label>Genere</label>
+      <input type="text" class="form-control" placeholder="Inserici nome del genere" name="description">
+    </div>
+
+    <button type="submit" class="btn btn-primary">Invia</button>
+  </form>
+</div>
+
+{% endblock %}

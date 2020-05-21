@@ -35,7 +35,7 @@ movies = Table('movies', metadata,
              Column('title', String),#not null
              Column('minimumAge', Integer, default = 0),#CHECK >=0
              Column('duration', Float, nullable = False),#CHECK >=0
-             Column('idGenre', None, ForeignKey('genres.id'))
+             Column('idGenre', None, ForeignKey('genres.id', onupdate="CASCADE", ondelete="SET NULL"))
 
             )
 
@@ -49,7 +49,7 @@ movieSchedule = Table('movieSchedule', metadata,
                     Column('dateTime',DateTime),#NOT NULL
                     Column('price', Float),#NOT NULL >=0
                     Column('idMovie', None, ForeignKey('movies.id'), nullable = False),
-                    Column('theater', None, ForeignKey(column='theaters.id', onupdate="CASCADE", ondelete="SET NULL"),  nullable = False)
+                    Column('theater', None, ForeignKey(column='theaters.id', onupdate="CASCADE", ondelete="SET NULL"))#,  nullable = False) perchè se voglio cancellare un theater ...
                     
                 )
 

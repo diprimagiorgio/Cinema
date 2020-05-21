@@ -1,0 +1,19 @@
+{% extends "menuTable.html" %}
+
+{% block right%}
+<div class="container mt-5">
+  <h2>Modifica genere cinematografico</h2><br>
+  
+
+  <form action="/modifyGenre/{{ genre['id'] }}" method="POST">
+
+    <div class="form-group mt-2">
+      <label>Genere</label>
+      <input type="text" class="form-control" value = {{ genre['description'] }} name="description">
+    </div>
+
+    <button type="submit" class="btn btn-primary">Invia</button>
+  </form>
+</div>
+
+{% endblock %}
