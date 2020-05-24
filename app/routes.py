@@ -1,11 +1,11 @@
 from flask import redirect, render_template, request, make_response, url_for, flash
 from sqlalchemy import insert, select, join, delete, and_
 from flask_login import LoginManager, UserMixin, current_user, login_user, logout_user
-
-
-from app.model import users, movies, genres, movieSchedule, theaters, clients, managers
+from app.model import users, movies, genres, movieSchedule, theaters, clients, managers, booking
 from app import app, engine
 from app.login import User, Role, login_required, login_manager
+from app.routesBooking import choicemovie
+import datetime
 
 #utlizzo l'interfaccia core e la modalita di utilizzo expression language
 #TODO cercare di capire come fare, per tipo io vorrei login prima stampare la pagina e poi ricevere i dat e bello o brutto
@@ -84,7 +84,7 @@ def loginClient():
         if user:
             login_user(User(user.id, Role.CLIENT))
             return render_template("success.html")#------------------------------------------------------------CAMBIARE RITORNO
-        flash('Email o password errate riprovare!', 'error')#con questo metodo scrivo un messaggio di errore nel html
+        flash('Email o password errate riprovare!', 'error')
     return render_template("loginClient.html")
 
 #Giosuè Zannini
@@ -101,7 +101,7 @@ def loginManager():
                 role = Role.SUPERVISOR
             login_user(User(user.id, role))
             return render_template("success.html")#------------------------------------------------------------CAMBIARE RITORNO
-        flash('Email o password errate riprovare!', 'error')#con questo metodo scrivo un messaggio di errore nel html
+        flash('Email o password errate riprovare!', 'error')
     return render_template("loginManager.html")
 
 
@@ -250,3 +250,6 @@ def removeTheater():
 
 #mancherebbe una funzione che fa l'update
 #-----------------------------------------------------------#
+
+
+
