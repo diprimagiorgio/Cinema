@@ -10,7 +10,11 @@ app.config['SECRET_KEY'] = 'prova' #is used to keep the client-side session secu
 
 #I'm using core and expression language
 
-engine = create_engine('postgresql://admin:secret@localhost/cinemaIlMolo')
+engine = create_engine(
+    'postgresql://admin:secret@localhost/cinemaIlMolo',
+    echo=True,
+    isolation_level='REPEATABLE_READ'
+)
 metadata = MetaData ()
 
 

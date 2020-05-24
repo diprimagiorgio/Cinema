@@ -1,0 +1,40 @@
+{% extends "menuTable.html" %}
+
+{% block right%}
+<div class="container mt-5">
+  <h2>Modifica Film</h2><br>
+  <h5>Seleziona il film da modificare</h5><br>
+  <form action="/selectMovieToUpdate" method="POST">
+
+    <table class="table mt-3">
+      <thead>
+          <tr>
+            <th scope="col">Seleziona</th>
+            <th scope="col">Titolo</th>
+            <th scope="col">Genere</th>
+            <th scope="col">Durata</th>
+            <th scope="col">Età minima</th>
+          </tr>
+      </thead>
+
+      <tbody>
+          {% for movie  in result %}
+            <tr>
+              <td align="center">
+                <input type="radio" name="choosed" value= {{ movie['id'] }} >
+              </td>
+              <td>{{ movie['title'] }}</td>
+              <td>{{ movie['description'] }}</td>
+              <td>{{ movie['duration'] }}</td>
+              <td>{{ movie['minimumAge'] }}</td>
+          </tr>
+      {% endfor %}
+  
+      </tbody>
+  </table>
+    
+    <button type="submit" class="btn btn-primary">Invia</button>
+  </form>
+</div>
+
+{% endblock %}

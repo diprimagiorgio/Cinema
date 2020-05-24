@@ -1,16 +1,17 @@
-from app import app
+from app import app, engine
 from sqlalchemy import insert, select, outerjoin, delete, bindparam
-from flask import  request, flash, redirect, url_for
+from flask import  request, flash, redirect, url_for, render_template
 from app.model import movies, genres, movieSchedule
 from .shared import queryAndTemplate, queryAndFun, queryHasResult
 from datetime import datetime
 
 #---------------------------------SELECT---------------------------------#
+#avevo messo outerjoin per i null adesso non dovrei più metterli
 #faccio una left join perchè voglio tutti i film anche quelli che non hanno un genere corrispondente
 @app.route("/listMovies")       
 def listMovies():
     s = select([movies.\
-            outerjoin(genres, genres.c.id == movies.c.idGenre)
+            join(genres, genres.c.id == movies.c.idGenre)
         ])
     return queryAndTemplate(s, "listMovies.html")
 
@@ -78,3 +79,39 @@ def removeMovie():                  #dovrei controllare che non ci siano date in
 
     s = select([movies])
     return queryAndTemplate(s, 'removeMovie.html')
+#---------------------------------UPDATE---------------------------------#
+@app.route('/selectMovieToUpdate', methods=['GET', 'POST'])
+def selectMovieToUpdate():
+    if request.method == 'POST':
+        id = request.form.get('choosed')
+        if id:
+            sel = select([movies]).\
+                where(movies.c.id == bindparam('id'))
+            conn = engine.connect()
+            r1 = conn.execute(sel, {'id' : id}).fetchone()
+            sel = select([genres])
+            r2 = conn.execute(sel)
+            conn.close()
+            return render_template("modifyMovie.html", genres = r2, movie = r1)
+        else:
+            flash('Inserire i dati richiesti !', 'error')
+
+    s = select([movies.c.id, movies.c.title, movies.c.duration, movies.c.minimumAge, genres.c.description]).\
+            where( movies.c.idGenre == genres.c.id)
+    return queryAndTemplate(s, "updateMovie.html")
+
+@app.route('/modifyMovie/<movieID>', methods=['POST'])
+def modifyMovie(movieID):
+    title = request.form.get("title")
+    age = request.form.get("age")
+    duration = request.form.get("duration")
+    genre = request.form.get("genre")
+    if title and age and duration and genre:
+        ins = movies.update().\
+            where(movies.c.id == bindparam('m_id')).\
+            values(title = bindparam('title') , minimumAge = bindparam('minimumAge'), duration = bindparam('duration'), idGenre = bindparam('idGenre'))
+        flash("Movie insert with success", 'info')
+        return queryAndFun(ins, 'listMovies',
+            {'m_id' : movieID, 'title' : title, 'minimumAge': age, 'duration' : duration, 'idGenre' : genre} )
+    flash("Dati mancanti", 'error')
+

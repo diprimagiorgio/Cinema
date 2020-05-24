@@ -1,0 +1,22 @@
+Io non so bene come bisogna permettere le cancellazioni, ad esepio io cancello un
+genere rimane un film senza un genere associato va bene?
+Poi i controlli dove vanno fatti a livello db mettendo un not null oppure 
+su python dicendo che se ci sono film collegati non deve permettere la cancellazione.
+
+
+Poi c'è un caso più particolare chè è quello del film cosa succede se cancello un film
+ci sono conseguenze sulle programmazioni ma anche quindi sui booking
+
+
+Per Genre
+    Inserimento OK
+    Select      OK
+    Modifica    OK 
+    Cancellazione ok magari posso scrivere meglio
+
+Per Sale
+    Inserimento
+
+
+Cosa succede se io modifico l'età minima di visione di un film con prenotazioni...
+isogna trovare il modo di mettere un solo admin nel db un vincolo che permetta di metterne solo uno

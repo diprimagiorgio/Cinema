@@ -3,6 +3,8 @@ from sqlalchemy import insert, select, delete, bindparam
 from flask import  request, flash, render_template, redirect, url_for
 from app.model import genres, movies
 from .shared import queryAndTemplate, queryAndFun, queryHasResult
+
+
 #---------------------------------SELECT---------------------------------#
 #DIPRIMA GIORGIO 
 @app.route("/listGenres")
@@ -27,29 +29,51 @@ def insertGenre():
 """
     La cancellazione può avvenire se
             - non ci sono film collegati
-            - se ci sono film collegati ma lascia tutti i film senza un genere di riferimneto....
-
+    Ci sono due i casi in cui posso accorgermi che c'è un film collegato:
+        - dopo la select se questa ha risultati, quindi per un inserimento precedente o
+        - dopo che io ho finito la select, generando un errore nella remove
+            in quanto viola il vincolo di integrità della foreign key no action.
+            In questo caso un altro utente ha effettuato un inserimento dopo l'esecuzione della select
 """
+#TODO   posso usare le funzioni in shared e cambiare la firma permettendo di passare anche una connessione
 #DIPRIMA GIORGIO 
 @app.route('/removeGenre', methods=['GET','POST'])
 def removeGenre():
     if request.method == 'POST':
-#DIPRIMA GIORGIO 
         id = request.form.get('genre')
-        option = request.form.get('option')
-        if id and option:
-            if option == '1':
-                #cancella solo se non ci sono film collegati -> qui dovrei fare ua transazione per atomicità dell'operazione
+        if id:
+            #cancella solo se non ci sono film collegati -> qui dovrei fare ua transazione per atomicità dell'operazione
+            conn = engine.connect()
+            trans = conn.begin()
+            try:
                 sel = select([movies]).\
                     where( movies.c.idGenre == bindparam('id'))
-                if queryHasResult(sel, {'id' : id} ):         #se ci sono film collegati mando errore
-                    flash('Il genere ha dei film collegati, cambia opzione di cancellazione per eliminarlo comunque', 'error')
-                    return redirect(url_for('removeGenre'))
-            rem = genres.delete().\
-                where(genres.c.id == bindparam('id'))
-            flash('Genere rimosso con successo!', 'info')
-            return queryAndFun(rem, 'listGenres', {'id' : id} ) 
+                
+                result = conn.execute(sel,  {'id' : id}).fetchone()
+
+                if result:         #se ci sono film collegati mando errore
+                   raise
+                
+                rem = genres.delete().\
+                    where(genres.c.id == bindparam('id'))
+                
+                result = conn.execute(rem,{'id' : id})
+                trans.commit()
+
+                flash('Genere rimosso con successo!', 'info')
+    
+                resp = redirect(url_for( 'listGenres'))
+                
+            except:
+                flash('Il genere ha dei film collegati, sei sicuro di non volerlo modificare?', 'error')
+                trans.rollback()
+                resp = redirect(url_for('removeGenre'))
+            finally:
+                conn.close()
+                return resp
+            
         flash('Inserire i dati richiesti !', 'error')
+    
     sel = select([genres])
     return queryAndTemplate(sel, 'removeGenre.html')
     

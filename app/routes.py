@@ -1,10 +1,13 @@
 from flask import redirect, render_template, request, make_response, url_for, flash
-from sqlalchemy import insert, select, join, delete, and_
+from sqlalchemy import insert, select, join, delete, and_, bindparam
 from flask_login import LoginManager, UserMixin, current_user, login_user, logout_user
 
 from app.model import users,clients, managers
 from app import app, engine
 from app.login import User, Role, login_required, current_user                           #qui ho aggiunto current user perchè c'e nel layout
+from sqlalchemy.orm import Session
+import time
+
 
 #utlizzo l'interfaccia core e la modalita di utilizzo expression language
 
@@ -110,3 +113,64 @@ def loginAttempt2():
             return render_template("success.html")
         flash('Email o password errate riprovare!')#con questo metodo scrivo un messaggio di errore nel html
     return render_template("loginManager.html")
+
+@app.route("/pay/<id_cl>/<amount>")
+def paga(id_cl, amount):
+    if(pay(id_cl, amount)):
+        return "Pagamento è andato a buon fine"
+    else:
+        return "Pagamento FALLITO"
+
+
+"""
+    Devo prendere un amount da un cliente e trasferirlo all'amministartore
+"""
+
+def pay(id, amount):
+    conn = engine.connect()
+    session = Session(bind=engine)
+    session.connection(execution_options={'isolation_level': 'REPEATABLE READ'})
+    try:
+        s_cl = select([clients.c.credit]).\
+                    select_from(
+                        clients.\
+                            join(users, users.c.id == clients.c.id)
+                    ).\
+                    where( 
+                        and_( 
+                                clients.c.id == bindparam('id'),
+                                clients.c.credit >= bindparam('amount') 
+                        )
+                    )
+
+        result = session.execute(s_cl,  {'id' : id, 'amount' : amount}).fetchone()
+        if not result:
+            raise
+
+        u_cl = clients.update().\
+                    where(clients.c.id == bindparam('id_cl')).\
+                    values( credit =  result['credit'] - float(amount) )
+
+
+        session.execute(u_cl, {'id_cl' : id})
+
+
+        s_mn = select([managers]).\
+                where(managers.c.admin == True)
+        result = session.execute(s_mn).fetchone()
+
+        u_mn = managers.update().\
+                where(managers.c.id == result['id']).\
+                values( financialReport = result['financialReport'] + float(amount) )
+            
+        session.execute(u_mn)
+
+        session.commit()
+        resp = True
+    except:
+        session.rollback()
+        resp = False
+    finally:
+        conn.close()
+        session.close()
+        return resp

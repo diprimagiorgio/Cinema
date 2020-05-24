@@ -1,9 +1,11 @@
 from app import app, engine
-from sqlalchemy import insert, select, join, delete, and_, bindparam
+from sqlalchemy import insert, select, delete, and_, bindparam
 from flask import  request, flash, make_response, render_template, redirect, url_for
 from app.model import theaters, movieSchedule
 from .shared import queryAndTemplate, queryHasResult, queryAndFun
 from datetime import datetime
+import time
+from sqlalchemy.orm import Session
 
 
 #---------------------------------SELECT---------------------------------#
@@ -13,22 +15,42 @@ def listTheaters():
     return queryAndTemplate(s, "listTheaters.html")
 
 #---------------------------------INSERT---------------------------------#
+#mi sembra non vada un cazzo
 @app.route("/insertTheater", methods=['GET', 'POST'])
 def insertTheater():
     if request.method == 'POST':
         capacity = request.form.get("capacity")
         id = request.form.get('id')
         if capacity and id :#verifico che mi abbiano passato i parametri e che non siano già registrate sale con lo stesso id
-            #forse questa dovrebbe essere una transaction
-            s = select([theaters]).\
-                where(theaters.c.id == bindparam('id'))
-            if queryHasResult(s, {'id' : id}):
-                flash('La sala numero {} è già salvata!'.format(id), 'error')
-            else:
-                ins = theaters.insert().values(id = bindparam('id'), seatsCapacity = bindparam('capacity'))
+            
+            conn = engine.connect()
+            session = Session(bind=engine)
+            session.connection(execution_options={'isolation_level': 'SERIALIZABLE'})
+            try:
+                s = select([theaters]).\
+                    where(theaters.c.id == bindparam('id'))
+                result = session.execute(s,  {'id' : id}).fetchone()
+                if result:
+                   raise
+                time.sleep(60)
+                session.execute(
+                            theaters.insert().\
+                                values(id = bindparam('id'), seatsCapacity = bindparam('capacity')),
+                            { 'id' : id, 'capacity' : capacity}
+
+                        )
+                session.commit()
                 flash("Theater insert with success!",'info' )
-                return queryAndFun(ins, 'listTheaters', { 'id' : id, 'capacity' : capacity} ) 
-            #
+                resp = redirect(url_for( 'listTheaters'))
+            except:
+                flash('La sala numero {} è già salvata!'.format(id), 'error')
+                
+                resp = redirect(url_for('insertTheater'))
+            finally:
+                conn.close()
+                session.close()
+                return resp
+
         else:
             flash("Dati mancanti",'error')
     return render_template("insertTheater.html")
