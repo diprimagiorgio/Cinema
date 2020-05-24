@@ -2,6 +2,7 @@ from flask import redirect, render_template, request, make_response, url_for, fl
 from sqlalchemy import insert, select, join, delete, and_
 from flask_login import LoginManager, UserMixin, current_user, login_user, logout_user
 from app.model import users, movies, genres, movieSchedule, theaters, clients, managers, booking
+from datetime import date, timedelta , datetime
 from app import app, engine
 from app.login import User, Role, login_required, login_manager
 from app.routesBooking import choicemovie
@@ -26,6 +27,7 @@ def logout():
     logout_user()
     return redirect(url_for('index'))
 
+
 #luca
 @app.route('/register', methods =['POST'] )
 def register():
@@ -34,15 +36,41 @@ def register():
     email = request.form.get("email")
     password = request.form.get("password")
     birthdate = request.form.get("birthdate")
+    
+    
+    
+    
+    
+    
+    
+    
+    
     if not name or not email or not password or not birthdate or not surname :
         return render_template("failure.html",message =  "Devi inserire tutti i dati")
+    
+    min =date.today() - timedelta(days = 4745)
+    if datetime.strptime(birthdate,"%Y-%m-%d").date()> min:
+        flash("Inserisci una data di compleanno valida","error")
+        return redirect ("/signIn")
+    
+    conn = engine.connect()
+    u = select([users]).where(users.c.email == email)
+    y = conn.execute(u).fetchone()
+    conn.close()
+    
+    if y is not  None:
+        flash('Email gia usata, riprova con un altra!', 'error') 
+        return redirect('/signIn')
+    
+    
+    
     conn = engine.connect()
     ins = users.insert(None).values(name=name, surname = surname, email = email, password = password)    
     conn.execute(ins)
     conn.close()
     
     conn = engine.connect()
-    query = select([users]).where(users.columns.email == email)
+    query = select([users]).where(users.c.email == email)
     ris = conn.execute(query).fetchone()
     insclients= clients.insert(None).values(id = ris.id, birthDate = birthdate, credit=0.)
     conn.execute(insclients)
@@ -50,12 +78,20 @@ def register():
     
     return redirect("/")
 #luca
-@app.route("/account_info")
+@app.route("/accountInfo")
 def account_info() :
     conn = engine.connect()
-    s = select([clients])
-    result = conn.execute(s)
-    resp = make_response(render_template("account_info.html", students = result))
+    join = users.join(clients, users.c.id == clients.c.id)
+    query = select([users,clients]).select_from(join).where(users.c.id == current_user.get_id())
+    
+    
+    
+    u = conn.execute(query)          #ritorna none se non contiene nessuna riga
+    
+    
+    
+                                 
+    resp = make_response(render_template("accountInfo.html", infoPersonali = u))
     conn.close()
     return resp
 
@@ -73,6 +109,7 @@ def findUser(table, email, password, sel):
     return user
 #--------------------------------------------------------------#
 
+    
 
 #Giosuè Zannini
 @app.route("/loginClient", methods=['POST', 'GET'])
@@ -106,21 +143,27 @@ def loginManager():
 
 
 #luca
-@app.route("/updatecredit1")
-@login_required()#richiede utente loggato
-def change():
-    return render_template("updatecredit.html")
 
-@app.route("/updatecredit2",methods = ['POST'])
+    
+
+@app.route("/updateCredit",methods = ['GET','POST'])
 def change1():
-    money = request.form.get("import")
-    conn = engine.connect()
-    base = select([clients]).where(clients.columns.id == current_user.get_id())
-    ris = conn.execute(base).fetchone()
-    query = clients.update().values(credit = float(money) + float(ris.credit)).where(clients.columns.id == current_user.get_id())
-    conn.execute(query)
-    conn.close()
-    return render_template("login.html")
+    if request.method == 'POST':
+        money = request.form.get("import")
+        conn = engine.connect()
+        base = select([clients]).where(clients.c.id == current_user.get_id())
+        ris = conn.execute(base).fetchone()
+        if float(money) < 0 :
+            flash("you can't insert neagtive value!",'error')
+            return redirect("/updateCredit")
+        query = clients.update().values(credit = float(money) + float(ris.credit)).where(clients.c.id == current_user.get_id())
+        flash("Recharge with success!",'info' )
+        conn.execute(query)
+        conn.close()
+        return redirect("/updateCredit")
+    else:
+        return render_template("updateCredit.html")
+
 
 
 
