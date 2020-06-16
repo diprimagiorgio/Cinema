@@ -34,7 +34,7 @@ movies = Table('movies', metadata,
              Column('id', Integer, primary_key = True, autoincrement=True), 
              Column('title', String),#not null
              Column('minimumAge', Integer, default = 0),#CHECK >=0
-             Column('duration', Float, nullable = False),#CHECK >=0
+             Column('duration', Integer, nullable = False),#CHECK >=0
              Column('idGenre', None, ForeignKey('genres.id'))
 
             )
@@ -59,7 +59,7 @@ booking = Table('booking', metadata,
                 Column('viewerAge', String),#NOT NULL
                 Column('seatNumber', Integer, nullable = False),
                 Column('clientUsername',None, ForeignKey('clients.id'), nullable = False),
-                Column('idmovieShedule', None, ForeignKey('movieSchedule.id'), nullable = False)
+                Column('idmovieSchedule', None, ForeignKey('movieSchedule.id'), nullable = False)
             )
 
 metadata.create_all(engine)

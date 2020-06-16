@@ -8,17 +8,10 @@
             <thead>
                 <tr>
                   <th scope="col">#</th>
-<<<<<<< HEAD:app/templates/registred.html
                   <th scope="col">Id</th>
                   <th scope="col">User</th>
                   <th scope="col">Email</th>
                   <th scope="col">Password</th>
-=======
-                  <th scope="col">Titolo</th>
-                  <th scope="col">Genere</th>
-                  <th scope="col">Durata</th>
-                  <th scope="col">Età minima</th>
->>>>>>> master:app/templates/listMovies.html
                 </tr>
             </thead>
 
@@ -26,17 +19,10 @@
                 {% for movie  in result %}
                     <tr>
                         <th scope="row">{{ loop.index0 + 1 }}</th>
-<<<<<<< HEAD:app/templates/registred.html
                         <td>{{ stu['id'] }}</td>
                         <td>{{ stu['name'] }}</td>
                         <td>{{ stu['email'] }}</td>
                         <td>{{ stu['password'] }}</td>
-=======
-                        <td>{{ movie['title'] }}</td>
-                        <td>{{ movie['description'] }}</td>
-                        <td>{{ movie['duration'] }}</td>
-                        <td>{{ movie['minimumAge'] }}</td>
->>>>>>> master:app/templates/listMovies.html
                     </tr>
                 {% endfor %}
             </tbody>

@@ -1,12 +1,12 @@
 from flask import redirect, render_template, request, make_response, url_for, flash
 from sqlalchemy import insert, select, join, delete, and_
 from flask_login import LoginManager, UserMixin, current_user, login_user, logout_user
+from app.model import users, movies, genres, movieSchedule, theaters, clients, managers, booking
 from datetime import date, timedelta , datetime
-
-
-from app.model import users, movies, genres, movieSchedule, theaters, clients, managers
 from app import app, engine
 from app.login import User, Role, login_required, login_manager
+import datetime
+from app.routesBooking import choicemovie
 from sqlalchemy.sql.functions import now
 
 #utlizzo l'interfaccia core e la modalita di utilizzo expression language
@@ -134,7 +134,7 @@ def loginClient():
         if user:
             login_user(User(user.id, Role.CLIENT))
             return render_template("success.html")#------------------------------------------------------------CAMBIARE RITORNO
-        flash('Email o password errate riprovare!', 'error')#con questo metodo scrivo un messaggio di errore nel html
+        flash('Email o password errate riprovare!', 'error')
     return render_template("loginClient.html")
 
 #Giosuè Zannini
@@ -151,7 +151,7 @@ def loginManager():
                 role = Role.SUPERVISOR
             login_user(User(user.id, role))
             return render_template("success.html")#------------------------------------------------------------CAMBIARE RITORNO
-        flash('Email o password errate riprovare!', 'error')#con questo metodo scrivo un messaggio di errore nel html
+        flash('Email o password errate riprovare!', 'error')
     return render_template("loginManager.html")
 
 
@@ -327,40 +327,3 @@ def statistiche():
             conn.close()
             
             return render_template("resultStatistiche.html",answer = ris1, genre = genere, age = ris2 )
-
-        else:
-            if sala!= 'Seleziona...' and film != 'Seleziona...'and genere =='Seleziona...':
-                conn = engine.connect()
-                #numeri di posti prenotati per sala per film
-                s = booking.join(movieSchedule, booking.c.idmovieSchedule == movieSchedule.c.id)
-                queryPosti = select([func.count(booking.c.id)]).select_from(s).where(and_(movieSchedule.c.idMovie == film, movieSchedule.c.theater == sala))
-                ris3 = conn.execute(queryPosti).fetchone()
-                print(ris3) #risposta da mandare ad un html
-                conn.close()
-                
-                conn = engine.connect()
-                #incasso per film
-                s = booking.join(movieSchedule, booking.c.idmovieSchedule == movieSchedule.c.id)
-                querynumeroPrenotazioni = select([func.sum(movieSchedule.c.price)]).select_from(s).where(movieSchedule.c.idMovie == film)
-            
-                ris4 = conn.execute(querynumeroPrenotazioni).fetchone()
-                print(ris4)
-                conn.close()
-                
-                
-                
-            flash('Dati mancanti', 'error')
-    s2 = select([genres])#trovo tutti i generi
-    s3 = select([theaters])#trovo tutte le sale
-    s41 = movieSchedule.join(movies, movieSchedule.c.idMovie== movies.c.id)
-    #s4 = select([func.distinct(movies.c.id),movies.c.title]).select_from(s41).order_by(movies.c.title)#trovo solo i film con prenotazioni mi manca il count distinct 
-    s4 = select([movies]).select_from(s41).order_by(movies.c.title)
-    conn = engine.connect()
-    generi = conn.execute(s2)
-    sale = conn.execute(s3)
-    film = conn.execute(s4)
-    resp = make_response(render_template("statistiche.html", genres = generi, theaters = sale, movies = film ))
-    conn.close()
-    return resp
-
-

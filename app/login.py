@@ -1,25 +1,15 @@
 from flask_login import LoginManager, UserMixin, current_user
-
 from app import app, engine
-
 from enum import IntEnum
-
 from sqlalchemy import select
-
 from app.model import users, clients, managers
-
 from functools import wraps
-
 from flask import redirect, flash
-
-
-
 
 
 #configurazione flask_login
 login_manager = LoginManager()
 login_manager.init_app(app)
-
 
 
 
@@ -87,7 +77,7 @@ def login_required(role = 0):
 #Giosuè Zannini
 @app.login_manager.unauthorized_handler
 def unauth_handler():
-    flash('Non sei autorizzato e non so cosa dirti ne dove mandarti', 'error')#------------decidere dove mandarlo
+    flash('Non sei autorizzato ad accedere a quest\'area', 'error')
     return redirect("/")
 
 
