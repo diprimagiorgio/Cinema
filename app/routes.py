@@ -7,16 +7,29 @@ from datetime import date, timedelta , datetime
 from app.model import users, movies, genres, movieSchedule, theaters, clients, managers
 from app import app, engine
 from app.login import User, Role, login_required, login_manager
+from sqlalchemy.sql.functions import now
 
 #utlizzo l'interfaccia core e la modalita di utilizzo expression language
 #TODO cercare di capire come fare, per tipo io vorrei login prima stampare la pagina e poi ricevere i dat e bello o brutto
 #@login_required
+
+
+
+
+
+
+
 @app.route('/')
 def index():
+    conn = engine.connect()
     if current_user.is_authenticated:
         return redirect(url_for('account_info'))         #chiamo la funzione invece del file
     return render_template("loginClient.html")
 
+    
+    
+        
+        
 @app.route('/signIn')
 def singIn():
     return render_template("register.html")
@@ -293,3 +306,61 @@ def removeTheater():
 
 #mancherebbe una funzione che fa l'update
 #-----------------------------------------------------------#
+@app.route("/statistiche",  methods=['GET','POST'])
+def statistiche():
+    
+    if request.method == 'POST':        
+        genere= request.form.get('genere')
+        sala= request.form.get('sale')
+        film= request.form.get('film')
+        if genere != 'Seleziona...':
+            
+            s = booking.join(movieSchedule, booking.c.idmovieSchedule == movieSchedule.c.id).join(movies, movieSchedule.c.idMovie == movies.c.id)
+            query = select([func.count(booking.c.id)]).select_from(s).where(movies.c.idGenre == genere)
+            
+            conn = engine.connect()
+            ris1 = conn.execute(query).fetchone()
+            queryAvgAge = select([func.avg(booking.c.viewerAge)]).select_from(s).where(movies.c.idGenre == genere)
+            
+            ris2 = conn.execute(queryAvgAge).fetchone()
+            
+            conn.close()
+            
+            return render_template("resultStatistiche.html",answer = ris1, genre = genere, age = ris2 )
+
+        else:
+            if sala!= 'Seleziona...' and film != 'Seleziona...'and genere =='Seleziona...':
+                conn = engine.connect()
+                #numeri di posti prenotati per sala per film
+                s = booking.join(movieSchedule, booking.c.idmovieSchedule == movieSchedule.c.id)
+                queryPosti = select([func.count(booking.c.id)]).select_from(s).where(and_(movieSchedule.c.idMovie == film, movieSchedule.c.theater == sala))
+                ris3 = conn.execute(queryPosti).fetchone()
+                print(ris3) #risposta da mandare ad un html
+                conn.close()
+                
+                conn = engine.connect()
+                #incasso per film
+                s = booking.join(movieSchedule, booking.c.idmovieSchedule == movieSchedule.c.id)
+                querynumeroPrenotazioni = select([func.sum(movieSchedule.c.price)]).select_from(s).where(movieSchedule.c.idMovie == film)
+            
+                ris4 = conn.execute(querynumeroPrenotazioni).fetchone()
+                print(ris4)
+                conn.close()
+                
+                
+                
+            flash('Dati mancanti', 'error')
+    s2 = select([genres])#trovo tutti i generi
+    s3 = select([theaters])#trovo tutte le sale
+    s41 = movieSchedule.join(movies, movieSchedule.c.idMovie== movies.c.id)
+    #s4 = select([func.distinct(movies.c.id),movies.c.title]).select_from(s41).order_by(movies.c.title)#trovo solo i film con prenotazioni mi manca il count distinct 
+    s4 = select([movies]).select_from(s41).order_by(movies.c.title)
+    conn = engine.connect()
+    generi = conn.execute(s2)
+    sale = conn.execute(s3)
+    film = conn.execute(s4)
+    resp = make_response(render_template("statistiche.html", genres = generi, theaters = sale, movies = film ))
+    conn.close()
+    return resp
+
+
