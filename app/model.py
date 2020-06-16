@@ -56,7 +56,7 @@ movieSchedule = Table('movieSchedule', metadata,
 booking = Table('booking', metadata, 
                 Column('id', Integer, primary_key = True),
                 Column('viewerName', String),#NOT NULL
-                Column('viewerAge', String),#NOT NULL
+                Column('viewerAge', Integer),#NOT NULL
                 Column('seatNumber', Integer, nullable = False),
                 Column('clientUsername',None, ForeignKey('clients.id'), nullable = False),
                 Column('idmovieSchedule', None, ForeignKey('movieSchedule.id'), nullable = False)
