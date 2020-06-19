@@ -5,7 +5,6 @@ from flask_login import LoginManager, UserMixin, current_user, login_user, logou
 from app.model import users,clients, managers
 from app import app, engine
 from app.login import User, Role, login_required, current_user                           #qui ho aggiunto current user perchè c'e nel layout
-from sqlalchemy.orm import Session
 import time
 
 
@@ -125,52 +124,44 @@ def paga(id_cl, amount):
 """
     Devo prendere un amount da un cliente e trasferirlo all'amministartore
 """
-
 def pay(id, amount):
     conn = engine.connect()
-    session = Session(bind=engine)
-    session.connection(execution_options={'isolation_level': 'REPEATABLE READ'})
+    trans = conn.begin()
     try:
-        s_cl = select([clients.c.credit]).\
-                    select_from(
-                        clients.\
-                            join(users, users.c.id == clients.c.id)
-                    ).\
+        #verifico che l'utente abbia un credito sufficiente
+        s_cl = select([clients]).\
                     where( 
                         and_( 
                                 clients.c.id == bindparam('id'),
                                 clients.c.credit >= bindparam('amount') 
                         )
                     )
-
-        result = session.execute(s_cl,  {'id' : id, 'amount' : amount}).fetchone()
+        result = conn.execute(s_cl,  {'id' : id, 'amount' : amount}).fetchone()
         if not result:
             raise
-
+        #rimuovo il credito dall'utente
         u_cl = clients.update().\
                     where(clients.c.id == bindparam('id_cl')).\
                     values( credit =  result['credit'] - float(amount) )
 
-
-        session.execute(u_cl, {'id_cl' : id})
-
-
+        conn.execute(u_cl, {'id_cl' : id})
+        time.sleep(30)
+        #selezione dell'id del manager
         s_mn = select([managers]).\
                 where(managers.c.admin == True)
-        result = session.execute(s_mn).fetchone()
-
+        result = conn.execute(s_mn).fetchone()
+        #decremento il bilancio dell'amministratore
         u_mn = managers.update().\
                 where(managers.c.id == result['id']).\
                 values( financialReport = result['financialReport'] + float(amount) )
-            
-        session.execute(u_mn)
+        conn.execute(u_mn)
 
-        session.commit()
+        trans.commit()
         resp = True
     except:
-        session.rollback()
+        trans.rollback()
         resp = False
     finally:
         conn.close()
-        session.close()
+        trans.close()
         return resp

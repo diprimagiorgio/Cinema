@@ -32,7 +32,7 @@ def insertTheater():
                 result = session.execute(s,  {'id' : id}).fetchone()
                 if result:
                    raise
-                time.sleep(60)
+                time.sleep(30)
                 session.execute(
                             theaters.insert().\
                                 values(id = bindparam('id'), seatsCapacity = bindparam('capacity')),
@@ -40,11 +40,10 @@ def insertTheater():
 
                         )
                 session.commit()
-                flash("Theater insert with success!",'info' )
+                flash("Sala inserita!",'info' )
                 resp = redirect(url_for( 'listTheaters'))
             except:
                 flash('La sala numero {} è già salvata!'.format(id), 'error')
-                
                 resp = redirect(url_for('insertTheater'))
             finally:
                 conn.close()

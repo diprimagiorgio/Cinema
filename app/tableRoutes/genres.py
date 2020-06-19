@@ -3,6 +3,8 @@ from sqlalchemy import insert, select, delete, bindparam
 from flask import  request, flash, render_template, redirect, url_for
 from app.model import genres, movies
 from .shared import queryAndTemplate, queryAndFun, queryHasResult
+import time
+from sqlalchemy.orm import Session
 
 
 #---------------------------------SELECT---------------------------------#
@@ -44,21 +46,29 @@ def removeGenre():
         if id:
             #cancella solo se non ci sono film collegati -> qui dovrei fare ua transazione per atomicità dell'operazione
             conn = engine.connect()
-            trans = conn.begin()
-            try:
+            session = Session(bind=engine)
+            session.connection(execution_options={'isolation_level': 'SERIALIZABLE'})
+  
+            #non so se abbia molto sensso in questo contesto usare la commit e la rollback
+            #alla fine c'è solo un operazione che va effettivamente a modificare il db.
+            #se lo faccio per l'atomicità tra la select e la delete devo verificare che 
+            #se io sto cancellando e qualcuno intanto va ad inserire un film con quel genere che succede ? può farlo
+            #come livello di isolamento dovrei scegliere un serializable
+            #DEVO METTERE SERIALIZABEL
+            try:            # magari potevo usare il try with resources(with) ma non avrei l'exept a disposizione
+                #vedo se ci sono film con quel genere se ci sono film collegati mando errore
                 sel = select([movies]).\
-                    where( movies.c.idGenre == bindparam('id'))
-                
-                result = conn.execute(sel,  {'id' : id}).fetchone()
-
-                if result:         #se ci sono film collegati mando errore
+                    where( movies.c.idGenre == bindparam('id'))            
+                result = session.execute(sel,  {'id' : id}).fetchone()
+                if result:
                    raise
-                
+                #rimuovo il film
+                time.sleep(20)
                 rem = genres.delete().\
                     where(genres.c.id == bindparam('id'))
                 
-                result = conn.execute(rem,{'id' : id})
-                trans.commit()
+                result = session.execute(rem,{'id' : id})
+                session.commit()
 
                 flash('Genere rimosso con successo!', 'info')
     
@@ -66,10 +76,11 @@ def removeGenre():
                 
             except:
                 flash('Il genere ha dei film collegati, sei sicuro di non volerlo modificare?', 'error')
-                trans.rollback()
+                session.rollback()
                 resp = redirect(url_for('removeGenre'))
             finally:
                 conn.close()
+                session.close()
                 return resp
             
         flash('Inserire i dati richiesti !', 'error')

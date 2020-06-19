@@ -23,7 +23,9 @@ def insertMovie():
         age = request.form.get("age")
         duration = request.form.get("duration")
         genre = request.form.get("genre")
-        if title and age and duration and genre:
+        if age == '':
+            age = 0
+        if title  and duration and genre:
             ins = movies.insert().\
                 values(title = bindparam('title') , minimumAge = bindparam('minimumAge'), duration = bindparam('duration'), idGenre = bindparam('idGenre'))
             flash("Movie insert with success", 'info')
