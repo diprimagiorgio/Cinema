@@ -28,14 +28,17 @@ managers = Table('managers', metadata,
 theaters = Table('theaters', metadata,
                 Column('id', Integer, primary_key = True),
                 Column('seatsCapacity', Integer, nullable = False),#numero posti >=0
+                Column('available', Boolean, nullable = False, default = True)
             )
 
 movies = Table('movies', metadata,
              Column('id', Integer, primary_key = True, autoincrement=True), 
              Column('title', String),#not null
              Column('minimumAge', Integer, default = 0),#CHECK >=0
-             Column('duration', Float, nullable = False),#CHECK >=0
-             Column('idGenre', None, ForeignKey('genres.id', onupdate="CASCADE", ondelete="NO ACTION"))
+             Column('duration', Integer, nullable = False),#CHECK >=0
+             Column('idGenre', None, ForeignKey('genres.id', onupdate="CASCADE", ondelete="NO ACTION"),  nullable = False),
+             Column('available', Boolean, nullable = False, default = True)
+
 
             )
 
@@ -48,7 +51,7 @@ movieSchedule = Table('movieSchedule', metadata,
                     Column('id', Integer, primary_key = True, autoincrement=True),
                     Column('dateTime',DateTime),#NOT NULL
                     Column('price', Float),#NOT NULL >=0
-                    Column('idMovie', None, ForeignKey('movies.id'), nullable = False),
+                    Column('idMovie', None, ForeignKey('movies.id', onupdate="CASCADE", ondelete="NO ACTION" ), nullable = False),
                     Column('theater', None, ForeignKey(column='theaters.id', onupdate="CASCADE", ondelete="SET NULL"))#,  nullable = False) perchè se voglio cancellare un theater ...
                     
                 )
@@ -56,7 +59,7 @@ movieSchedule = Table('movieSchedule', metadata,
 booking = Table('booking', metadata, 
                 Column('id', Integer, primary_key = True),
                 Column('viewerName', String),#NOT NULL
-                Column('viewerAge', String),#NOT NULL
+                Column('viewerAge', Integer),#NOT NULL
                 Column('seatNumber', Integer, nullable = False),
                 Column('clientUsername',None, ForeignKey('clients.id'), nullable = False),
                 Column('idmovieSchedule', None, ForeignKey('movieSchedule.id'), nullable = False)

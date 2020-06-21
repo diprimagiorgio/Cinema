@@ -4,7 +4,6 @@ from flask import  request, flash, render_template, redirect, url_for
 from app.model import genres, movies
 from .shared import queryAndTemplate, queryAndFun, queryHasResult
 import time
-from sqlalchemy.orm import Session
 
 
 #---------------------------------SELECT---------------------------------#
@@ -12,7 +11,7 @@ from sqlalchemy.orm import Session
 @app.route("/listGenres")
 def listGenres():
     s = select([genres])
-    return queryAndTemplate(s, "listGenres.html")
+    return queryAndTemplate(s, "/tables/genre/listGenres.html")
 
 #---------------------------------INSERT---------------------------------#
 #DIPRIMA GIORGIO 
@@ -25,7 +24,7 @@ def insertGenre():
             flash("Il genere è stato inserito con successo", 'info')
             return queryAndFun(ins, "listGenres", {'description' : des} )
         flash('Devi inserire una descrizione per il genere', 'error')
-    return render_template("insertGenre.html")
+    return render_template("/tables/genre/insertGenre.html")
 
 #---------------------------------DELETE---------------------------------#
 """
@@ -37,56 +36,33 @@ def insertGenre():
             in quanto viola il vincolo di integrità della foreign key no action.
             In questo caso un altro utente ha effettuato un inserimento dopo l'esecuzione della select
 """
-#TODO   posso usare le funzioni in shared e cambiare la firma permettendo di passare anche una connessione
 #DIPRIMA GIORGIO 
 @app.route('/removeGenre', methods=['GET','POST'])
 def removeGenre():
     if request.method == 'POST':
         id = request.form.get('genre')
         if id:
-            #cancella solo se non ci sono film collegati -> qui dovrei fare ua transazione per atomicità dell'operazione
+            #cancella solo se non ci sono film collegati
             conn = engine.connect()
-            session = Session(bind=engine)
-            session.connection(execution_options={'isolation_level': 'SERIALIZABLE'})
-  
-            #non so se abbia molto sensso in questo contesto usare la commit e la rollback
-            #alla fine c'è solo un operazione che va effettivamente a modificare il db.
-            #se lo faccio per l'atomicità tra la select e la delete devo verificare che 
-            #se io sto cancellando e qualcuno intanto va ad inserire un film con quel genere che succede ? può farlo
-            #come livello di isolamento dovrei scegliere un serializable
-            #DEVO METTERE SERIALIZABEL
-            try:            # magari potevo usare il try with resources(with) ma non avrei l'exept a disposizione
-                #vedo se ci sono film con quel genere se ci sono film collegati mando errore
-                sel = select([movies]).\
-                    where( movies.c.idGenre == bindparam('id'))            
-                result = session.execute(sel,  {'id' : id}).fetchone()
-                if result:
-                   raise
-                #rimuovo il film
-                time.sleep(20)
+            #lo faccio dentro un try perchè se ci sono film collegati va in errore perchè condizione sulla chiave esterna
+            try:
                 rem = genres.delete().\
                     where(genres.c.id == bindparam('id'))
-                
-                result = session.execute(rem,{'id' : id})
-                session.commit()
+                result = conn.execute(rem,{'id' : id})
 
                 flash('Genere rimosso con successo!', 'info')
-    
                 resp = redirect(url_for( 'listGenres'))
-                
             except:
                 flash('Il genere ha dei film collegati, sei sicuro di non volerlo modificare?', 'error')
-                session.rollback()
                 resp = redirect(url_for('removeGenre'))
             finally:
                 conn.close()
-                session.close()
                 return resp
             
         flash('Inserire i dati richiesti !', 'error')
     
     sel = select([genres])
-    return queryAndTemplate(sel, 'removeGenre.html')
+    return queryAndTemplate(sel, '/tables/genre/removeGenre.html')
     
 #---------------------------------UPDATE---------------------------------#
 #DIPRIMA GIORGIO 
@@ -97,19 +73,16 @@ def selectGenreToUpdate():
         if id:
             sel = select([genres]).\
                 where(genres.c.id == bindparam('id'))
-                
-                #TODO forse si potrebbe mettere in shared
-          
+            #TODO forse si potrebbe mettere in shared, ma devo avere il parametro e il fetchone
             conn = engine.connect()
             result = conn.execute(sel, {'id' : id}).fetchone()
             conn.close()
-      
-            return render_template('modifyGenre.html',genre  = result)
+            return render_template('/tables/genre/modifyGenre.html',result  = result)
         else:
             flash('Inserire i dati richiesti !', 'error')
 
     s = select([genres])
-    return queryAndTemplate(s, "updateGenre.html")
+    return queryAndTemplate(s, "/tables/genre/updateGenre.html")
 
 #DIPRIMA GIORGIO 
 @app.route('/modifyGenre/<genreID>', methods=['POST'])

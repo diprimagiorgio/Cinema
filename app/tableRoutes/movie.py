@@ -6,14 +6,14 @@ from .shared import queryAndTemplate, queryAndFun, queryHasResult
 from datetime import datetime
 
 #---------------------------------SELECT---------------------------------#
-#avevo messo outerjoin per i null adesso non dovrei più metterli
-#faccio una left join perchè voglio tutti i film anche quelli che non hanno un genere corrispondente
+selectMovies = s = select([movies.\
+            join(genres, genres.c.id == movies.c.idGenre)
+        ]).\
+            where( movies.c.available == True )
+#è sufficiente fare una join perchè tutti i film hanno un genere collegato
 @app.route("/listMovies")       
 def listMovies():
-    s = select([movies.\
-            join(genres, genres.c.id == movies.c.idGenre)
-        ])
-    return queryAndTemplate(s, "listMovies.html")
+    return queryAndTemplate(selectMovies, "/tables/movie/listMovies.html")
 
 #---------------------------------INSERT---------------------------------#
 @app.route("/insertMovie", methods=['GET','POST'])
@@ -32,7 +32,7 @@ def insertMovie():
             return queryAndFun(ins, 'listMovies', {'title' : title, 'minimumAge': age, 'duration' : duration, 'idGenre' : genre} )
         flash("Dati mancanti", 'error')
     s = select([genres])
-    return queryAndTemplate(s,"insertMovie.html")
+    return queryAndTemplate(s,"/tables/movie/insertMovie.html")
 
 #---------------------------------DELETE---------------------------------#
 # ho deciso di fare il controllo se il film è nel db o meno.
@@ -42,45 +42,86 @@ def insertMovie():
 # movieSchedule associato ma questo è associato a delle prenotazioni, se cancello anche quelle
 #divrei anche restituirei i soldi....
 # TODO opzioni di cancellazione TUTTO DA SISTEMARE
-""" 
+"""
+Faccio come con le sale 
     Io posso cancellare un film se
-            - se non ci sono spettacoli collegati
-            - se ci fossero spettacoli in passato, però a quel punto cosa devo mettere sul film ?? Secondo me non è possibile
-            - se ci saranno spettacoli in futuro, però a quel punto dovrei anche chiamare la cancellazione del movie schedule associato.
-                magari il quale mi dicese si può cancellare uno spettacolo o meno, quindi forse sarebbe meglio prima implementare
+            - se non ci sono spettacoli collegati posso eliminare
+            - se ci fossero spettacoli in passato, metto disabilitato il film
+            - se ci saranno spettacoli in futuro, non posso cancellare
 """
 @app.route('/removeMovie', methods=['POST', 'GET'])
 def removeMovie():                  #dovrei controllare che non ci siano date in programmazione
     if request.method == 'POST':
         id = request.form.get('id')
-        opz = request.form.get('option')
-        if id and opz:
-            if opz == '1':
+        if id:
+            #verifico se ci sono spettacoli collegati
+            sel = select([movieSchedule]).\
+                    where( movieSchedule.c.idMovie == bindparam('id'))
+            if queryHasResult(sel, {'id' : id}):
+            #verifico se gli spettacoli collegati sono futuri
                 sel = select([movieSchedule]).\
-                    where(movieSchedule.c.idMovie == bindparam('id'))
-                if queryHasResult(sel, {'id' : id}):         # ci sono film programmati
-                    flash('Ci sono spettacoli colleagti a questo film, cambiare impostazione cancellazione', 'error')
-                    return redirect(url_for('removeMovie'))
-            elif opz == '2':
-                sel = select([movieSchedule]).\
-                    where(
-                        and_( movieSchedule.c.idMovie == bindparam('id'),
-                              movieSchedule.c.dateTime >= datetime.today()
+                        where( 
+                            and_(
+                                movieSchedule.c.idMovie == bindparam('id'),
+                                movieSchedule.c.dateTime >= datetime.today()
+                            )
                         )
-                    )
-                if queryHasResult(sel, {'id' : id}):         # ci sono film programmati per il futuro
-                    flash('Ci sono spettacoli colleagti a questo film FUTURI, cambiare impostazione cancellazione', 'error')
-                    return redirect(url_for('removeMovie'))
+                if queryHasResult(sel, {'id' : id}):
+                    #non posso cancellare
+                    flash(  """Non si può rimuovere il film perchè ci sono proiezioni non ancora andate in onda.\n
+                                Riassegna le proiezioni ad un altro film. """, 'error')
+                else:    
+                    #devo mettere non disponibile
+                    up = movies.update().\
+                        where(movies.c.id == bindparam('t_id')).\
+                        values(available = False)
+                    flash("Film DISABILITATO!", 'info')
+                    return queryAndFun(up, 'listMovies', {'t_id' : id})
+            else:
+                #posso cancellarlo
+                rm = movies.delete().\
+                    where(movies.c.id == bindparam('id'))
+                flash("Film rimossa!", 'info')
+                return queryAndFun(rm, 'listMovies', {'id' : id})
+        
 
-            rem = movies.delete().\
-                where(movies.c.id == bindparam('id'))
-            flash("Il film è stato rimosso", 'info')                
-            return queryAndFun(rem, 'listMovies', {'id' : id})
+
+
+
+
+
+
+
+
+
+
+
+    #        if opz == '1':
+    #            sel = select([movieSchedule]).\
+    #                where(movieSchedule.c.idMovie == bindparam('id'))
+    #            if queryHasResult(sel, {'id' : id}):         # ci sono film programmati
+    #                flash('Ci sono spettacoli colleagti a questo film, cambiare impostazione cancellazione', 'error')
+    #                return redirect(url_for('removeMovie'))
+    #        elif opz == '2':
+    #            sel = select([movieSchedule]).\
+    #                where(
+    #                    and_( movieSchedule.c.idMovie == bindparam('id'),
+    #                          movieSchedule.c.dateTime >= datetime.today()
+    #                    )
+    #                )
+    #            if queryHasResult(sel, {'id' : id}):         # ci sono film programmati per il futuro
+    #                flash('Ci sono spettacoli colleagti a questo film FUTURI, cambiare impostazione cancellazione', 'error')
+    #                return redirect(url_for('removeMovie'))
+#
+    #        rem = movies.delete().\
+    #            where(movies.c.id == bindparam('id'))
+    #        flash("Il film è stato rimosso", 'info')                
+    #        return queryAndFun(rem, 'listMovies', {'id' : id})
         else:    
             flash('Inserisci tutti i dati richiesti', 'error')
 
     s = select([movies])
-    return queryAndTemplate(s, 'removeMovie.html')
+    return queryAndTemplate(s, '/tables/movie/removeMovie.html')
 #---------------------------------UPDATE---------------------------------#
 @app.route('/selectMovieToUpdate', methods=['GET', 'POST'])
 def selectMovieToUpdate():
@@ -94,13 +135,13 @@ def selectMovieToUpdate():
             sel = select([genres])
             r2 = conn.execute(sel)
             conn.close()
-            return render_template("modifyMovie.html", genres = r2, movie = r1)
+            return render_template("/tables/movie/modifyMovie.html", genres = r2, movie = r1)
         else:
             flash('Inserire i dati richiesti !', 'error')
-
+#potrei fare solo movies?
     s = select([movies.c.id, movies.c.title, movies.c.duration, movies.c.minimumAge, genres.c.description]).\
             where( movies.c.idGenre == genres.c.id)
-    return queryAndTemplate(s, "updateMovie.html")
+    return queryAndTemplate(s, "/tables/movie/updateMovie.html")
 
 @app.route('/modifyMovie/<movieID>', methods=['POST'])
 def modifyMovie(movieID):

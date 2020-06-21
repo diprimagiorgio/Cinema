@@ -12,14 +12,15 @@ app.config['SECRET_KEY'] = 'prova' #is used to keep the client-side session secu
 
 engine = create_engine(
     'postgresql://admin:secret@localhost/cinemaIlMolo',
-    isolation_level='REPEATABLE_READ'
+    isolation_level='REPEATABLE_READ',
+    echo = True
 )
 metadata = MetaData ()
 
 
 from app import login
 from app import routes
-from app.tableRoutes import movie, movieSchedule, theaters, genres
-
+from app.tableRoutes import movie, movieSchedule, theater, genre
+from app import initializer, pay
 #bisogna fare anche per genre
 

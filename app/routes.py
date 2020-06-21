@@ -14,7 +14,7 @@ import time
 def index():
     if current_user.is_authenticated:
         return redirect(url_for('account_info'))         #chiamo la funzione invece del file
-    return render_template("menuTable.html")
+    return render_template("/tables/menuTable.html")
 
 @app.route('/signIn')
 def singIn():
@@ -112,56 +112,3 @@ def loginAttempt2():
             return render_template("success.html")
         flash('Email o password errate riprovare!')#con questo metodo scrivo un messaggio di errore nel html
     return render_template("loginManager.html")
-
-@app.route("/pay/<id_cl>/<amount>")
-def paga(id_cl, amount):
-    if(pay(id_cl, amount)):
-        return "Pagamento è andato a buon fine"
-    else:
-        return "Pagamento FALLITO"
-
-
-"""
-    Devo prendere un amount da un cliente e trasferirlo all'amministartore
-"""
-def pay(id, amount):
-    conn = engine.connect()
-    trans = conn.begin()
-    try:
-        #verifico che l'utente abbia un credito sufficiente
-        s_cl = select([clients]).\
-                    where( 
-                        and_( 
-                                clients.c.id == bindparam('id'),
-                                clients.c.credit >= bindparam('amount') 
-                        )
-                    )
-        result = conn.execute(s_cl,  {'id' : id, 'amount' : amount}).fetchone()
-        if not result:
-            raise
-        #rimuovo il credito dall'utente
-        u_cl = clients.update().\
-                    where(clients.c.id == bindparam('id_cl')).\
-                    values( credit =  result['credit'] - float(amount) )
-
-        conn.execute(u_cl, {'id_cl' : id})
-        time.sleep(30)
-        #selezione dell'id del manager
-        s_mn = select([managers]).\
-                where(managers.c.admin == True)
-        result = conn.execute(s_mn).fetchone()
-        #decremento il bilancio dell'amministratore
-        u_mn = managers.update().\
-                where(managers.c.id == result['id']).\
-                values( financialReport = result['financialReport'] + float(amount) )
-        conn.execute(u_mn)
-
-        trans.commit()
-        resp = True
-    except:
-        trans.rollback()
-        resp = False
-    finally:
-        conn.close()
-        trans.close()
-        return resp

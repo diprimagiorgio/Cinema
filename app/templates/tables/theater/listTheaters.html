@@ -1,20 +1,22 @@
-{% extends "menuTable.html" %}
+{% extends "/tables/menuTable.html" %}
 
 {% block right%}
     <div class="container-md mt-5">
-        <h2>Elenco generi cinematografici</h2>
+        <h2>Elenco sale</h2>
 
         <table class="table mt-3">
             <thead>
                 <tr>
-                  <th scope="col">Genere</th>
+                  <th scope="col">Sala</th>
+                  <th scope="col">Capienza</th>
                 </tr>
             </thead>
 
             <tbody>
-                {% for genre  in result %}
+                {% for theater  in result %}
                     <tr>
-                        <td>{{ genre['description'] }}</td>
+                        <td>{{ theater['id'] }}</td>
+                        <td>{{ theater['seatsCapacity'] }}</td>
                     </tr>
                 {% endfor %}
             </tbody>
