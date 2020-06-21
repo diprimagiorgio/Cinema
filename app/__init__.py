@@ -12,8 +12,7 @@ app.config['SECRET_KEY'] = 'Sq9obiBTY7hyb10ga9lja5MgYQNz' #is used to keep the c
 
 engine = create_engine(
     'postgresql://admin:secret@localhost/cinemaIlMolo',
-    isolation_level='REPEATABLE_READ',
-    echo = True
+    isolation_level='REPEATABLE_READ'
 )
 metadata = MetaData ()
 

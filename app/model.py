@@ -52,7 +52,7 @@ movieSchedule = Table('movieSchedule', metadata,
                     Column('dateTime',DateTime),#NOT NULL
                     Column('price', Float),#NOT NULL >=0
                     Column('idMovie', None, ForeignKey('movies.id', onupdate="CASCADE", ondelete="NO ACTION" ), nullable = False),
-                    Column('theater', None, ForeignKey(column='theaters.id', onupdate="CASCADE", ondelete="SET NULL"))#,  nullable = False) perchè se voglio cancellare un theater ...
+                    Column('theater', None, ForeignKey(column='theaters.id', onupdate="CASCADE", ondelete="SET NULL"), nullable = False)#,  nullable = False) perchè se voglio cancellare un theater ...
                     
                 )
 
