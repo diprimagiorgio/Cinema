@@ -1,0 +1,36 @@
+{% extends "statistiche1.html" %}
+
+{% block right%}
+  
+
+    <div class="container mt-5">
+      <h2>Saldo per film</h2>
+          <table class="table mt-4">
+              <thead>
+                  <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Titolo</th>
+                    <th scope="col">Saldo (€) </th>
+                  </tr>
+              </thead>
+  
+              <tbody>
+                  {% for x in  saldo%}
+                      <tr>
+                          <th scope="row">{{ loop.index0 + 1 }}</th>
+                          <td>{{ x['title'] }}</td>
+                          <td>{{ x['sum'] }}</td>
+
+                          
+                      </tr>
+                  {% endfor %}
+                  
+              </tbody>
+          </table>
+  </div>
+   
+
+  </form>
+</div>
+    
+{% endblock %}

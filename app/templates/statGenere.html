@@ -1,0 +1,37 @@
+{% extends "statistiche1.html" %}
+
+{% block right%}
+  
+
+    <div class="container mt-5">
+      <h2>Numero di prenotazioni associate ad ogni genere ed eta' media degli spettatori</h2>
+          <table class="table mt-4">
+              <thead>
+                  <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Genere</th>
+                    <th scope="col">Numero di prenotazioni</th>
+                    <th scope="col">Eta' media</th>
+                  </tr>
+              </thead>
+  
+              <tbody>
+                  {% for x in  numeroPrenotazioni%}
+                      <tr>
+                          <th scope="row">{{ loop.index0 + 1 }}</th>
+                          <td>{{ x['description'] }}</td>
+                          <td>{{ x['numero'] }}</td>
+                          <td>{{ x['avgAge'] }}</td>
+
+                          
+                      </tr>
+                  {% endfor %}
+                  
+              </tbody>
+          </table>
+  </div>
+   
+
+
+    
+{% endblock %}

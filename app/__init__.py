@@ -16,5 +16,6 @@ metadata = MetaData ()
 
 from app import login
 from app import routes
+from app import statistiche
 
 
