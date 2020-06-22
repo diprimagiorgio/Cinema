@@ -21,10 +21,9 @@ from sqlalchemy.sql.functions import now
 
 @app.route('/')
 def index():
-    conn = engine.connect()
-    if current_user.is_authenticated:
-        return redirect(url_for('account_info'))         #chiamo la funzione invece del file
-    return redirect(url_for('loginClient'))
+    if current_user.is_authenticated and current_user.role > Role.CLIENT:
+        return render_template("/manager/shared/layout.html")
+    return render_template("/user/shared/layout.html")
 
 @app.route('/dataBase')
 def dataBase():
@@ -35,7 +34,7 @@ def dataBase():
         #è scritto sbagliato e sarebbe meglio fare tutto in una funzione
 @app.route('/signIn')
 def singIn():
-    return render_template("register.html")
+    return render_template("/user/noLogged/register.html")
 
 @app.route('/logout')
 @login_required()
@@ -62,7 +61,8 @@ def register():
     
     
     if not name or not email or not password or not birthdate or not surname :
-        return render_template("failure.html",message =  "Devi inserire tutti i dati")
+        flash("Devi inserire tutti i dati")
+        return redirect ("/signIn")
     
     min =date.today() - timedelta(days = 4745)
     if datetime.strptime(birthdate,"%Y-%m-%d").date()> min:
@@ -74,7 +74,7 @@ def register():
     y = conn.execute(u).fetchone()
     conn.close()
     
-    if y is not  None:
+    if y is not None:
         flash('Email gia usata, riprova con un altra!', 'error') 
         return redirect('/signIn')
     
@@ -107,7 +107,7 @@ def account_info() :
     
     
                                  
-    resp = make_response(render_template("accountInfo.html", infoPersonali = u))
+    resp = make_response(render_template("/user/logged/accountInfo.html", infoPersonali = u))
     conn.close()
     return resp
 
@@ -131,30 +131,37 @@ def findUser(table, email, password, sel):
 @app.route("/loginClient", methods=['POST', 'GET'])
 def loginClient():
     if request.method == 'POST':
-        email = request.form.get("email")
-        password = request.form.get("password")
-        user = findUser(clients, email, password, [users])  
-        if user:
-            login_user(User(user.id, Role.CLIENT))
-            return render_template("success.html")#------------------------------------------------------------CAMBIARE RITORNO
-        flash('Email o password errate riprovare!', 'error')
-    return render_template("loginClient.html")
+        if not current_user.is_authenticated:
+            email = request.form.get("email")
+            password = request.form.get("password")
+            user = findUser(clients, email, password, [users])  
+            if user:
+                login_user(User(user.id, Role.CLIENT))
+                flash('Loggato correttamente', 'info')
+                return render_template("/user/shared/layout.html")
+            flash('Email o password errate riprovare!', 'error')
+        else:
+            flash('Sei già loggato', 'error')
+    return render_template("/user/noLogged/loginClient.html")
 
 #Giosuè Zannini
 @app.route("/loginManager", methods=['POST', 'GET'])
 def loginManager():
     if request.method == 'POST':
-        email = request.form.get("email")
-        password = request.form.get("password")
-        user = findUser(managers, email, password, [users, managers.c.admin])
-        if user:
-            if user.admin:
-                role = Role.ADMIN
-            else:
-                role = Role.SUPERVISOR
-            login_user(User(user.id, role))
-            return render_template("/manager/shared/layout.html")#------------------------------------------------------------CAMBIARE RITORNO
-        flash('Email o password errate riprovare!', 'error')
+        if not current_user.is_authenticated: 
+            email = request.form.get("email")
+            password = request.form.get("password")
+            user = findUser(managers, email, password, [users, managers.c.admin])
+            if user:
+                if user.admin:
+                    role = Role.ADMIN
+                else:
+                    role = Role.SUPERVISOR
+                login_user(User(user.id, role))
+                return render_template("/manager/shared/layout.html")
+            flash('Email o password errate riprovare!', 'error')
+        else:
+            flash('Sei già loggato', 'error')        
     return render_template("/manager/shared/loginManager.html")
 
     #potrei fare che se admin vedo 
@@ -185,7 +192,7 @@ def change1():
         conn.close()
         return redirect("/updateCredit")
     else:
-        return render_template("updateCredit.html")
+        return render_template("/user/logged/updateCredit.html")
 
 
 

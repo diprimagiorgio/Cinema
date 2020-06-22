@@ -21,11 +21,7 @@ users = Table( 'users', metadata,
 
 clients = Table( 'clients', metadata,
                 Column('id', None , ForeignKey('users.id'), primary_key = True),
-<<<<<<< HEAD
                 Column('credit', Float, nullable = False, default = 0.0),
-=======
-                Column('credit', Float, nullable = False ),
->>>>>>> master
                 Column('birthDate', Date),
                 CheckConstraint(column('credit') >= 0, name='credit_ct_0'),
                 CheckConstraint(column('birthDate') < str(datetime.date.today()), name='birth_ct_')

@@ -28,7 +28,7 @@ def choicemovie():
             where(movieSchedule.c.dateTime > (datetime.datetime.now() - datetime.timedelta(minutes=15))) # blocco la prenotazione di un film 15 minuti prima della sua visione
     conn = engine.connect()
     result = conn.execute(query)
-    resp = make_response(render_template("choiceMovie.html", result = result))
+    resp = make_response(render_template("/user/logged/choiceMovie.html", result = result))
     conn.close()
     return resp
 
@@ -74,7 +74,7 @@ def book(idmovieSchedule):
     seatsOccuped = createIntegerListFromQuery(conn.execute(queryBooking, {'idmovieSchedule' : idmovieSchedule}))
     #oltre ai posti realmente prenotati mi blocca la scelta anche dei posti che stanno per essere prenotati
     addTemporaryListInList(idmovieSchedule, seatsOccuped)
-    resp = make_response(render_template("book.html", infoTheater = infoTheater, seatsOccuped = seatsOccuped, idmovieSchedule = idmovieSchedule))
+    resp = make_response(render_template("/user/logged/book.html", infoTheater = infoTheater, seatsOccuped = seatsOccuped, idmovieSchedule = idmovieSchedule))
     conn.close()
     return resp
     
@@ -141,7 +141,7 @@ def completeBooking(idmovieSchedule, listOfBooking):
             else: #caso in cui il tempo per la prenotazione è scaduto
                 flash("Tempo per la prenotazione scaduto", "error") 
             return redirect("/")
-    return render_template("completeBooking.html", listOfBooking = listOfBooking, idmovieSchedule = idmovieSchedule, price = price)
+    return render_template("/user/logged/completeBooking.html", listOfBooking = listOfBooking, idmovieSchedule = idmovieSchedule, price = price)
 
 
 
