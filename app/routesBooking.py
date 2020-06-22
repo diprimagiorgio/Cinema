@@ -1,11 +1,12 @@
 from flask import redirect, render_template, request, make_response, url_for, flash
-from sqlalchemy import insert, select, join, and_
+from sqlalchemy import insert, select, join, and_, bindparam
 from flask_login import current_user
 from app.model import movies, genres, movieSchedule, theaters, booking
 from app import app, engine
 from app.login import login_required
 import datetime
 from app.functionForBooking import createIntegerListFromQuery, createIntegerListFromString, removeElemInTemporaryList, KeyIsInTemporaryList, isNotInTemporaryList, addTemporaryListInList, startTimer, timerIsAlive, timerBookingInProgress, convertToInt
+from app.pay import pay
 
 
 
@@ -41,9 +42,9 @@ def book(idmovieSchedule):
     conn = engine.connect()
     queryTheater = select([theaters.c.id, theaters.c.seatsCapacity]).\
                    select_from(theaters.join(movieSchedule, theaters.c.id == movieSchedule.c.theater)).\
-                   where(movieSchedule.c.id == idmovieSchedule)
+                   where(movieSchedule.c.id == bindparam('idmovieSchedule'))
     #mi ritorna il numero della sala e la capienza 
-    infoTheater = conn.execute(queryTheater).fetchone()
+    infoTheater = conn.execute(queryTheater, {'idmovieSchedule' : idmovieSchedule}).fetchone()
     conn.close()
     theaterName = infoTheater['id'] #numero della sala
     #creo una nuova chiave nel dizionario nel caso non sia stata creata
@@ -68,9 +69,9 @@ def book(idmovieSchedule):
     #mi ritorna i posti già prenotati
     queryBooking = select([booking.c.seatNumber]).\
                    select_from(booking.join(movieSchedule, booking.c.idmovieSchedule == movieSchedule.c.id)).\
-                   where(movieSchedule.c.id == idmovieSchedule)
+                   where(movieSchedule.c.id == bindparam('idmovieSchedule'))
     #mi torna una lista di interi contenenti i posti occupati
-    seatsOccuped = createIntegerListFromQuery(conn.execute(queryBooking))
+    seatsOccuped = createIntegerListFromQuery(conn.execute(queryBooking, {'idmovieSchedule' : idmovieSchedule}))
     #oltre ai posti realmente prenotati mi blocca la scelta anche dei posti che stanno per essere prenotati
     addTemporaryListInList(idmovieSchedule, seatsOccuped)
     resp = make_response(render_template("book.html", infoTheater = infoTheater, seatsOccuped = seatsOccuped, idmovieSchedule = idmovieSchedule))
@@ -88,17 +89,17 @@ def completeBooking(idmovieSchedule, listOfBooking):
     listOfBooking = createIntegerListFromString(listOfBooking)
     conn = engine.connect()
     query = select([movieSchedule.c.price]).\
-            where(movieSchedule.c.id == idmovieSchedule)
+            where(movieSchedule.c.id == bindparam('idmovieSchedule'))
     #mi torna il prezzo che deve pagare il cliente per la visione
-    price = conn.execute(query).fetchone()['price'] * len(listOfBooking)
+    price = conn.execute(query, {'idmovieSchedule' : idmovieSchedule}).fetchone()['price'] * len(listOfBooking)
     conn.close() 
     if request.method == 'POST':  
         conn = engine.connect()
         query = select([movies.c.minimumAge, movieSchedule.c.theater]).\
                 select_from(movieSchedule.join(movies, movieSchedule.c.idMovie == movies.c.id)).\
-                where(movieSchedule.c.id == idmovieSchedule)
+                where(movieSchedule.c.id == bindparam('idmovieSchedule'))
         #età minima per lo spettatore e numero sala
-        info = conn.execute(query).fetchone()
+        info = conn.execute(query, {'idmovieSchedule' : idmovieSchedule}).fetchone()
         conn.close()
         minimumAge = info['minimumAge'] #età minima 
         theaterName = info['theater'] #numero sala
@@ -120,7 +121,7 @@ def completeBooking(idmovieSchedule, listOfBooking):
         else:
             if timerIsAlive(current_user.get_id()): #caso in cui il thread è ancora attivo
                 #--------------------------FUNZIONE GIORGIO--------------------------
-                if (True): # pay(current_user.get_id(), price):----------------------------------------------------Da sistemare
+                if pay(current_user.get_id(), price):
                     queryIns = [] #contiene le query
                     #creazione query
                     for i in range(len(listOfBooking)):
