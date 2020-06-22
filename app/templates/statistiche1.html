@@ -1,0 +1,22 @@
+{% extends "/shared/layout.html" %}
+
+{% block body %}
+<div class="row  mt-4 ml-1">
+    <div class="col-4">
+      <div class="list-group" id="list-tab" role="tablist">
+        <a class="list-group-item" href="/numeroPrenotazioniPerGenere">Numero di prenotazioni ed eta media degli spettatori</a>
+        <a class="list-group-item" href="/saldoPerFilm">Saldo film</a>
+        <a class="list-group-item" href="/occupazioneSalaPerFilm">Tasso di occupazione della sala per film(arco di tempo da inserire)</a>
+
+
+    </div>
+
+
+    <div class="col-8">
+       
+    {% block right%} {% endblock%}
+    </div>
+</div>
+
+
+{% endblock %}

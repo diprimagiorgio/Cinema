@@ -47,7 +47,7 @@ def load_user(user_id):
                 select_from(users.join(managers)).\
                 where(users.c.id == user_id)
         result = conn.execute(query).fetchone()
-        if result.admin:
+        if result['admin'] == True:
             role = Role.ADMIN
         else:
             role = Role.SUPERVISOR

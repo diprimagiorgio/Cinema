@@ -3,13 +3,6 @@ from sqlalchemy import  select, bindparam
 from app.model import clients, managers
 from app import app, engine
 
-#solo per test poi si può eliminare
-@app.route("/pay/<id_cl>/<amount>")
-def paga(id_cl, amount):
-    if(pay(id_cl, amount)):
-        return "Pagamento è andato a buon fine"
-    else:
-        return "Pagamento FALLITO"
 
 """
     Devo prendere un amount da un cliente e trasferirlo all'amministartore

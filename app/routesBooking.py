@@ -1,11 +1,12 @@
 from flask import redirect, render_template, request, make_response, url_for, flash
-from sqlalchemy import insert, select, join, and_
+from sqlalchemy import insert, select, join, and_, bindparam
 from flask_login import current_user
 from app.model import movies, genres, movieSchedule, theaters, booking
 from app import app, engine
 from app.login import login_required
 import datetime
-from app.functionForBooking import convertToFloat, convertToInt, createIntegerListFromQuery, createIntegerListFromString, removeElemInTemporaryList, KeyIsInTemporaryList, isNotInTemporaryList, addTemporaryListInList, startTimer, timerIsAlive
+from app.functionForBooking import createIntegerListFromQuery, createIntegerListFromString, removeElemInTemporaryList, KeyIsInTemporaryList, isNotInTemporaryList, addTemporaryListInList, startTimer, timerIsAlive, timerBookingInProgress, convertToInt
+from app.pay import pay
 
 
 
@@ -15,8 +16,11 @@ def choicemovie():
     if request.method == 'POST':
         choice = request.form.get("choice") #idmovieSchedule
         if choice:
-            return redirect(url_for("book", idmovieSchedule = choice))
-        flash('Effettuare una scelta', 'error')
+            if not timerBookingInProgress(current_user.get_id()):
+                return redirect(url_for("book", idmovieSchedule = choice))
+            flash("Hai già una prenotazione in corso", "error")
+        else:
+            flash('Effettuare una scelta', 'error')
     query = select([movieSchedule.\
             join(movies, movieSchedule.c.idMovie == movies.c.id).\
             join(genres, movies.c.idGenre == genres.c.id)]).\
@@ -24,7 +28,7 @@ def choicemovie():
             where(movieSchedule.c.dateTime > (datetime.datetime.now() - datetime.timedelta(minutes=15))) # blocco la prenotazione di un film 15 minuti prima della sua visione
     conn = engine.connect()
     result = conn.execute(query)
-    resp = make_response(render_template("choiceMovie.html", result = result))
+    resp = make_response(render_template("/user/logged/choiceMovie.html", result = result))
     conn.close()
     return resp
 
@@ -38,9 +42,9 @@ def book(idmovieSchedule):
     conn = engine.connect()
     queryTheater = select([theaters.c.id, theaters.c.seatsCapacity]).\
                    select_from(theaters.join(movieSchedule, theaters.c.id == movieSchedule.c.theater)).\
-                   where(movieSchedule.c.id == idmovieSchedule)
+                   where(movieSchedule.c.id == bindparam('idmovieSchedule'))
     #mi ritorna il numero della sala e la capienza 
-    infoTheater = conn.execute(queryTheater).fetchone()
+    infoTheater = conn.execute(queryTheater, {'idmovieSchedule' : idmovieSchedule}).fetchone()
     conn.close()
     theaterName = infoTheater['id'] #numero della sala
     #creo una nuova chiave nel dizionario nel caso non sia stata creata
@@ -53,7 +57,7 @@ def book(idmovieSchedule):
                 listOfBooking.append(i + 1) #popolo la lista
         if listOfBooking:#caso in cui ha scelto almeno un posto
             if isNotInTemporaryList(idmovieSchedule, listOfBooking):#caso in cui non ha scelto posti già in fase di prenotazione, vengono aggiunti alla temporary list
-                seconds = len(listOfBooking) * 30
+                seconds = len(listOfBooking) * 30 #tempo di prenotazione dato all'utente
                 startTimer(idmovieSchedule, listOfBooking, seconds, current_user.get_id())
                 flash("Hai a disposizione %d secondi per completare la prenotazione" % seconds,"info")
                 return redirect(url_for("completeBooking", idmovieSchedule = idmovieSchedule, listOfBooking = listOfBooking))
@@ -65,12 +69,12 @@ def book(idmovieSchedule):
     #mi ritorna i posti già prenotati
     queryBooking = select([booking.c.seatNumber]).\
                    select_from(booking.join(movieSchedule, booking.c.idmovieSchedule == movieSchedule.c.id)).\
-                   where(movieSchedule.c.id == idmovieSchedule)
+                   where(movieSchedule.c.id == bindparam('idmovieSchedule'))
     #mi torna una lista di interi contenenti i posti occupati
-    seatsOccuped = createIntegerListFromQuery(conn.execute(queryBooking))
+    seatsOccuped = createIntegerListFromQuery(conn.execute(queryBooking, {'idmovieSchedule' : idmovieSchedule}))
     #oltre ai posti realmente prenotati mi blocca la scelta anche dei posti che stanno per essere prenotati
     addTemporaryListInList(idmovieSchedule, seatsOccuped)
-    resp = make_response(render_template("book.html", infoTheater = infoTheater, seatsOccuped = seatsOccuped, idmovieSchedule = idmovieSchedule))
+    resp = make_response(render_template("/user/logged/book.html", infoTheater = infoTheater, seatsOccuped = seatsOccuped, idmovieSchedule = idmovieSchedule))
     conn.close()
     return resp
     
@@ -83,13 +87,19 @@ def book(idmovieSchedule):
 def completeBooking(idmovieSchedule, listOfBooking):
     #crea una lista di interi da una stringa contenente i posti da voler prenotare
     listOfBooking = createIntegerListFromString(listOfBooking)
+    conn = engine.connect()
+    query = select([movieSchedule.c.price]).\
+            where(movieSchedule.c.id == bindparam('idmovieSchedule'))
+    #mi torna il prezzo che deve pagare il cliente per la visione
+    price = conn.execute(query, {'idmovieSchedule' : idmovieSchedule}).fetchone()['price'] * len(listOfBooking)
+    conn.close() 
     if request.method == 'POST':  
         conn = engine.connect()
         query = select([movies.c.minimumAge, movieSchedule.c.theater]).\
                 select_from(movieSchedule.join(movies, movieSchedule.c.idMovie == movies.c.id)).\
-                where(movieSchedule.c.id == idmovieSchedule)
+                where(movieSchedule.c.id == bindparam('idmovieSchedule'))
         #età minima per lo spettatore e numero sala
-        info = conn.execute(query).fetchone()
+        info = conn.execute(query, {'idmovieSchedule' : idmovieSchedule}).fetchone()
         conn.close()
         minimumAge = info['minimumAge'] #età minima 
         theaterName = info['theater'] #numero sala
@@ -110,30 +120,29 @@ def completeBooking(idmovieSchedule, listOfBooking):
             flash("Età minima non rispettata", "error")
         else:
             if timerIsAlive(current_user.get_id()): #caso in cui il thread è ancora attivo
-                #--------------------------FUNZIONE GIORGIO---------------------------
-                queryIns = [] #contiene le query
-                #creazione query
-                for i in range(len(listOfBooking)):
-                    queryIns.append(booking.insert().\
-                                    values(viewerName = viewer[i], viewerAge = viewerAge[i], seatNumber = listOfBooking[i], 
-                                           clientUsername = current_user.get_id(), idmovieSchedule = idmovieSchedule))
-                conn = engine.connect()            
-                #inserimento nel DB
-                for q in queryIns:
-                    conn.execute(q)
-                conn.close()    
-                #libero il posto dalla lista dei prenotanti
-                removeElemInTemporaryList(listOfBooking, idmovieSchedule)
-                flash("Prenotazione avvenuta con successo", "info")
+                #--------------------------FUNZIONE GIORGIO--------------------------
+                if pay(current_user.get_id(), price):
+                    queryIns = [] #contiene le query
+                    #creazione query
+                    for i in range(len(listOfBooking)):
+                        queryIns.append(booking.insert().\
+                                        values(viewerName = viewer[i], viewerAge = viewerAge[i], seatNumber = listOfBooking[i], 
+                                               clientUsername = current_user.get_id(), idmovieSchedule = idmovieSchedule))
+                    conn = engine.connect()            
+                    #inserimento nel DB
+                    for q in queryIns:
+                        conn.execute(q)
+                    conn.close()    
+                    #libero il posto dalla lista dei prenotanti
+                    removeElemInTemporaryList(listOfBooking, idmovieSchedule)
+                    flash("Prenotazione avvenuta con successo", "info")       
+                else:
+                    flash("Credito insufficiente", "error")
             else: #caso in cui il tempo per la prenotazione è scaduto
                 flash("Tempo per la prenotazione scaduto", "error") 
             return redirect("/")
-    conn = engine.connect()
-    query = select([movieSchedule.c.price]).\
-            where(movieSchedule.c.id == idmovieSchedule)
-    #mi torna il prezzo che deve pagare il cliente per la visione
-    price = convertToFloat(str(conn.execute(query).fetchone())) * len(listOfBooking)
-    conn.close() 
-    return render_template("completeBooking.html", listOfBooking = listOfBooking, idmovieSchedule = idmovieSchedule, price = price)
+    return render_template("/user/logged/completeBooking.html", listOfBooking = listOfBooking, idmovieSchedule = idmovieSchedule, price = price)
+
+
 
 
