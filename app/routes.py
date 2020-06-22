@@ -5,7 +5,6 @@ from app.model import users, movies, genres, movieSchedule, theaters, clients, m
 from datetime import date, timedelta , datetime
 from app import app, engine
 from app.login import User, Role, login_required, login_manager
-import datetime
 from app.routesBooking import choicemovie
 from sqlalchemy.sql.functions import now
 
@@ -25,12 +24,15 @@ def index():
     conn = engine.connect()
     if current_user.is_authenticated:
         return redirect(url_for('account_info'))         #chiamo la funzione invece del file
-    return render_template("/tables/menuTable.html")
+    return redirect(url_for('loginClient'))
 
+@app.route('/dataBase')
+def dataBase():
+    return render_template("/tables/menuTable.html")
     
     
-        
-        
+
+        #è scritto sbagliato e sarebbe meglio fare tutto in una funzione
 @app.route('/signIn')
 def singIn():
     return render_template("register.html")
@@ -151,9 +153,16 @@ def loginManager():
             else:
                 role = Role.SUPERVISOR
             login_user(User(user.id, role))
-            return render_template("success.html")#------------------------------------------------------------CAMBIARE RITORNO
+            return render_template("/manager/shared/layout.html")#------------------------------------------------------------CAMBIARE RITORNO
         flash('Email o password errate riprovare!', 'error')
-    return render_template("loginManager.html")
+    return render_template("/manager/shared/loginManager.html")
+
+    #potrei fare che se admin vedo 
+    #               il bilancio
+    #               la possibilità di registrare menager
+    #               le tabelle 
+
+    #se manager vede le tabelle
 
 
 #luca

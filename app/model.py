@@ -12,7 +12,7 @@ users = Table( 'users', metadata,
 
 clients = Table( 'clients', metadata,
                 Column('id', None , ForeignKey('users.id'), primary_key = True),
-                Column('credit', Float, nullable = False ),#credito potrebbe essere not null e >=0
+                Column('credit', Float, nullable = False ),
                 Column('birthDate', Date),
              #   CheckConstraint( (column('birthDate') > date.today().__str__() ), name='minBirthDate'),           # non funziona da vedere 
                 CheckConstraint(column('credit') >= 0, name='credit_gt_0')
