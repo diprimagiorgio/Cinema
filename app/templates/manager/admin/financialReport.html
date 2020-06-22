@@ -1,0 +1,29 @@
+{% extends '/manager/shared/layout.html'%}
+
+{% block body %}
+
+
+
+<div class="container">
+  <div class="card-deck mt-5 text-center">
+
+    <div class="card shadow-sm">
+      <div class="card-header">
+        <h4 class="my-0 font-weight-normal">Bilancio</h4>
+      </div>
+      <div class="card-body">
+        <h1 class="card-title pricing-card-title">€ {{result['financialReport']}} </h1>
+        
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+
+
+
+
+
+{% endblock %}

@@ -1,11 +1,11 @@
 {% extends "/shared/layout.html" %}
 {% block navBar %}
   {% if current_user.role == 2 %}
-    <li class="nav-item active">
-      <a class="nav-link" href="#">Registra Menager  <span class="sr-only">(current)</span></a>
+    <li class="nav-item">
+      <a class="nav-link" href="#">Registra gestore</a>
     </li>
     <li class="nav-item ml-3">
-      <a class="nav-link" href="/#">Bilancio</a>
+      <a class="nav-link" href="/financialReport">Bilancio</a>
     </li>
   {% endif %}
   <li class="nav-item ml-3">

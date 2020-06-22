@@ -4,11 +4,11 @@ from flask import  request, flash, render_template, redirect, url_for
 from app.model import genres, movies
 from .shared import queryAndTemplate, queryAndFun, queryHasResult
 import time
-
-
+from app.login import Role, login_required
 #---------------------------------SELECT---------------------------------#
 #DIPRIMA GIORGIO 
 @app.route("/listGenres")
+@login_required(Role.SUPERVISOR)
 def listGenres():
     s = select([genres])
     return queryAndTemplate(s, "/tables/genre/listGenres.html")
@@ -16,6 +16,7 @@ def listGenres():
 #---------------------------------INSERT---------------------------------#
 #DIPRIMA GIORGIO 
 @app.route("/insertGenre", methods=['GET','POST'])
+@login_required(Role.SUPERVISOR)
 def insertGenre():
     if request.method == 'POST':
         des = request.form.get('description')
@@ -38,6 +39,7 @@ def insertGenre():
 """
 #DIPRIMA GIORGIO 
 @app.route('/removeGenre', methods=['GET','POST'])
+@login_required(Role.SUPERVISOR)
 def removeGenre():
     if request.method == 'POST':
         id = request.form.get('genre')
@@ -67,6 +69,7 @@ def removeGenre():
 #---------------------------------UPDATE---------------------------------#
 #DIPRIMA GIORGIO 
 @app.route('/selectGenreToUpdate', methods=['GET', 'POST'])
+@login_required(Role.SUPERVISOR)
 def selectGenreToUpdate():
     if request.method == "POST":
         id = request.form.get('choosed')
@@ -86,6 +89,7 @@ def selectGenreToUpdate():
 
 #DIPRIMA GIORGIO 
 @app.route('/modifyGenre/<genreID>', methods=['POST'])
+@login_required(Role.SUPERVISOR)
 def modifyGenre(genreID):
     des = request.form.get('description')
     if des: 

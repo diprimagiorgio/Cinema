@@ -30,6 +30,16 @@ def index():
 def dataBase():
     return render_template("/tables/menuTable.html")
     
+@app.route('/financialReport')
+def financialReport():
+    sel = select([managers]).\
+            where( managers.c.admin == True)
+    conn = engine.connect()
+    res = conn.execute(sel).fetchone()
+    conn.close()
+    return render_template("/manager/admin/financialReport.html", result = res)
+
+    
     
 
         #è scritto sbagliato e sarebbe meglio fare tutto in una funzione

@@ -6,6 +6,7 @@ from .shared import queryAndTemplate, queryHasResult, queryAndFun
 from datetime import datetime
 import time
 from sqlalchemy.orm import Session
+from app.login import Role, login_required
 
 
 #---------------------------------SELECT---------------------------------#
@@ -17,6 +18,7 @@ def selectTheaters():
     return result
 
 @app.route("/listTheaters")
+@login_required(Role.SUPERVISOR)
 def listTheaters():
     res = selectTheaters()
     return render_template("/tables/theater/listTheaters.html", result = res)
@@ -24,6 +26,7 @@ def listTheaters():
 #---------------------------------INSERT---------------------------------#
 #mi sembra non vada un cazzo
 @app.route("/insertTheater", methods=['GET', 'POST'])
+@login_required(Role.SUPERVISOR)
 def insertTheater():
     if request.method == 'POST':
         capacity = request.form.get("capacity")
@@ -71,6 +74,7 @@ def insertTheater():
 """
 
 @app.route("/removeTheater", methods=['GET', 'POST'])
+@login_required(Role.SUPERVISOR)
 def removeTheater():
     if request.method == 'POST':
         id = request.form.get("id")
@@ -114,6 +118,7 @@ def removeTheater():
 #---------------------------------UPDATE---------------------------------#
 
 @app.route('/selectTheaterToUpdate', methods=['GET', 'POST'])
+@login_required(Role.SUPERVISOR)
 def selectTheaterToUpdate():
     if request.method == "POST":
         id = request.form.get('choosed')
@@ -142,6 +147,7 @@ def selectTheaterToUpdate():
     return render_template("/tables/theater/updateTheater.html", result = result)
 
 @app.route('/modifyTheater/<theaterID>', methods=['POST'])
+@login_required(Role.SUPERVISOR)
 def modifyTheater(theaterID):
     cap = request.form.get('capacity')
     if cap: 

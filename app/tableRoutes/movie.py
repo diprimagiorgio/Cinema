@@ -4,6 +4,7 @@ from flask import  request, flash, redirect, url_for, render_template
 from app.model import movies, genres, movieSchedule
 from .shared import queryAndTemplate, queryAndFun, queryHasResult
 from datetime import datetime
+from app.login import Role, login_required
 
 #---------------------------------SELECT---------------------------------#
 selectMovies = s = select([movies.\
@@ -12,11 +13,13 @@ selectMovies = s = select([movies.\
             where( movies.c.available == True )
 #è sufficiente fare una join perchè tutti i film hanno un genere collegato
 @app.route("/listMovies")       
+@login_required(Role.SUPERVISOR)
 def listMovies():
     return queryAndTemplate(selectMovies, "/tables/movie/listMovies.html")
 
 #---------------------------------INSERT---------------------------------#
 @app.route("/insertMovie", methods=['GET','POST'])
+@login_required(Role.SUPERVISOR)
 def insertMovie():
     if request.method == 'POST':
         title = request.form.get("title")
@@ -50,6 +53,7 @@ Faccio come con le sale
             - se ci saranno spettacoli in futuro, non posso cancellare
 """
 @app.route('/removeMovie', methods=['POST', 'GET'])
+@login_required(Role.SUPERVISOR)
 def removeMovie():                  #dovrei controllare che non ci siano date in programmazione
     if request.method == 'POST':
         id = request.form.get('id')
