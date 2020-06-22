@@ -1,0 +1,22 @@
+{% extends "/shared/layout.html" %}
+{% block navBar %}
+  {% if current_user.is_anonymous %}
+    <li class="nav-item ml-3">
+      <a class="nav-link" href="/signIn">Registrati</a>
+    </li>
+    <li class="nav-item ml-3">
+      <a class="nav-link" href="/loginClient">Login</a>
+    </li>
+    {% else %}
+    <li class="nav-item ml-3">
+      <a class="nav-link" href="/accountInfo">Account info</a>
+    </li>
+    <li class="nav-item ml-3">
+      <a class="nav-link" href="/logout">Logout</a>
+    </li>
+  {% endif %}
+    <li class="nav-item ml-3">
+      <a class="nav-link" href="/choiceMovie">Ricerca Film</a>
+    </li>
+
+{% endblock %}

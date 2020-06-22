@@ -1,0 +1,47 @@
+{% extends "/user/shared/layout.html" %}
+
+{% block body%}
+
+        <h3>Account info:  </h3>
+        
+        <table class="table">
+                <thead>
+                    <tr>
+                      <th scope="col">Name</th>
+                      <th scope="col">Email</th>
+                      <th scope="col">Password</th>
+                      <th scope="col">Credit</th>
+                      <th scope="col">birth</th>
+
+
+                      
+
+
+                    </tr>
+                </thead>
+    
+                <tbody>
+                    {% for info  in infoPersonali%}
+                        <tr>
+                            <td>{{ info['name'] }}</td>
+                            <td>{{ info['email'] }}</td>
+                            <td>{{ info['password'] }}</td>
+                            <td>{{ info['credit'] }}</td>
+                            <td>{{ info['birthDate'] }}</td>
+
+
+                        </tr>
+                    {% endfor %}
+                    
+                    
+                </tbody>
+            </table>
+            <hr>
+            <div class="form-group mt-2">
+                <a href="/updateCredit">Aggiorna Credito</a>
+            </div>
+    
+    
+
+
+{% endblock %}

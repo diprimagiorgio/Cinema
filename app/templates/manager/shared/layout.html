@@ -1,0 +1,18 @@
+{% extends "/shared/layout.html" %}
+{% block navBar %}
+  {% if current_user.role == 2 %}
+    <li class="nav-item ml-3">
+      <a class="nav-link" href="#">Registra Menager</a>
+    </li>
+    <li class="nav-item ml-3">
+      <a class="nav-link" href="/#">Bilancio</a>
+    </li>
+  {% endif %}
+  <li class="nav-item ml-3">
+    <a class="nav-link" href="/dataBase">Database</a>
+  </li>
+  <li class="nav-item ml-3">
+    <a class="nav-link" href="/logout">Logout</a>
+  </li>
+
+{% endblock %}

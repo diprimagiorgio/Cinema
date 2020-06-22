@@ -1,0 +1,25 @@
+{% extends "/tables/menuTable.html" %}
+
+{% block right%}
+<div class="container mt-5">
+  <h2>Rimuovi genere cinematografico</h2>
+  <form action="/removeGenre" method="POST">
+
+    <div class="form-group mt-2">
+      <label>Genere</label>
+      <select class="custom-select" name="genre">
+        <option selected>Seleziona...</option>
+        {% for genre in result%}
+          <option value= {{ genre['id'] }} >{{ genre['description']}}</option>
+        {% endfor %}
+      </select>
+      <small class="form-text text-muted">Può essere rimosso solo se non sono stati collgati film!</small>
+
+    </div>
+
+    
+    <button type="submit" class="btn btn-primary">Invia</button>
+  </form>
+</div>
+
+{% endblock %}

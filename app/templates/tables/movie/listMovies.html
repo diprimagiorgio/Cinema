@@ -1,0 +1,32 @@
+{% extends "/tables/menuTable.html" %}
+
+{% block right%}
+
+<div class="container mt-5">
+    <h2>Elenco Film</h2>
+        <table class="table mt-4">
+            <thead>
+                <tr>
+                  <th scope="col">#</th>
+                  <th scope="col">Titolo</th>
+                  <th scope="col">Genere</th>
+                  <th scope="col">Durata</th>
+                  <th scope="col">Età minima</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for movie  in result %}
+                    <tr>
+                        <th scope="row">{{ loop.index0 + 1 }}</th>
+                        <td>{{ movie['title'] }}</td>
+                        <td>{{ movie['description'] }}</td>
+                        <td>{{ movie['duration'] }}</td>
+                        <td>{{ movie['minimumAge'] }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+</div>
+
+{% endblock %}

@@ -10,12 +10,21 @@ app.config['SECRET_KEY'] = 'Sq9obiBTY7hyb10ga9lja5MgYQNz' #is used to keep the c
 
 #I'm using core and expression language
 
-engine = create_engine('postgresql://admin:secret@localhost/cinemaIlMolo')
+engine = create_engine(
+    'postgresql://admin:secret@localhost/cinemaIlMolo',
+    isolation_level='REPEATABLE_READ'
+)
 metadata = MetaData ()
 
 
 from app import login
 from app import routes
+<<<<<<< HEAD
 from app import statistiche
 
+=======
+from app.tableRoutes import movie, movieSchedule, theater, genre
+from app import initializer, pay
+#bisogna fare anche per genre
+>>>>>>> master
 

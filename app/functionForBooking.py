@@ -4,21 +4,13 @@ import time
 from threading import Thread 
 
 
+
+
 temporaryBooking = {} #mi tiene traccia dei posti in fase di prenotazione, come chiave si usa il numero della sala
 timeOutBooking = {} #mi tiene traccia del time out per la prenotazione di ogni utente (thread utente), come chiave si usa id utente
 
 
 #----------------------------Funzioni varie
-
- #converte stringa in float
-def convertToFloat(s):
-    val = ''
-    for i in range(len(s)):
-        if '0' <= s[i] <= '9' or s[i] == '.':
-            val = val + s[i]
-    if val == '':
-        val = '0'
-    return float(val)
 
  #converte stringa in int
 def convertToInt(s):
@@ -111,7 +103,7 @@ class TimerForBooking(Thread):
                 break
         if not self.stop:    
             removeElemInTemporaryList(self.listOfBooking, self.idmovieSchedule)
-        (timeOutBooking.get(self.current_user))[1] = False
+        (timeOutBooking.get(self.current_user))[1] = False # metto a false il bool del thread
         
  #crea nel dizionario la chiave con current user con elemento il thread timer e fa lo start      
 def startTimer(idmovieSchedule, listOfBooking, time, current_user):
@@ -121,10 +113,14 @@ def startTimer(idmovieSchedule, listOfBooking, time, current_user):
  #controlla lo stato del thread, se è ancora attivo lo blocco e torno true altrimenti torno false
 def timerIsAlive(current_user):
     alive = False
-    if timeOutBooking.get(current_user)[1]:
+    if timeOutBooking.get(current_user)[1]: # in caso sia true
         alive = True
         (timeOutBooking.get(current_user)[0]).kill()
         (timeOutBooking.get(current_user)[0]).join()
     timeOutBooking.pop(current_user)
     return alive
 
+def timerBookingInProgress(current_user):
+    if timeOutBooking.get(current_user):
+        return timeOutBooking.get(current_user)[1]
+    return False

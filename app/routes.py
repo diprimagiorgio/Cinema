@@ -5,9 +5,9 @@ from app.model import users, movies, genres, movieSchedule, theaters, clients, m
 from datetime import date, timedelta , datetime
 from app import app, engine
 from app.login import User, Role, login_required, login_manager
-import datetime
 from app.routesBooking import choicemovie
 from sqlalchemy.sql.functions import now
+
 
 #utlizzo l'interfaccia core e la modalita di utilizzo expression language
 #TODO cercare di capire come fare, per tipo io vorrei login prima stampare la pagina e poi ricevere i dat e bello o brutto
@@ -21,18 +21,20 @@ from sqlalchemy.sql.functions import now
 
 @app.route('/')
 def index():
-    conn = engine.connect()
-    if current_user.is_authenticated:
-        return redirect(url_for('account_info'))         #chiamo la funzione invece del file
-    return render_template("loginClient.html")
+    if current_user.is_authenticated and current_user.role > Role.CLIENT:
+        return render_template("/manager/shared/layout.html")
+    return render_template("/user/shared/layout.html")
 
+@app.route('/dataBase')
+def dataBase():
+    return render_template("/tables/menuTable.html")
     
     
-        
-        
+
+        #è scritto sbagliato e sarebbe meglio fare tutto in una funzione
 @app.route('/signIn')
 def singIn():
-    return render_template("register.html")
+    return render_template("/user/noLogged/register.html")
 
 @app.route('/logout')
 @login_required()
@@ -59,7 +61,8 @@ def register():
     
     
     if not name or not email or not password or not birthdate or not surname :
-        return render_template("failure.html",message =  "Devi inserire tutti i dati")
+        flash("Devi inserire tutti i dati")
+        return redirect ("/signIn")
     
     min =date.today() - timedelta(days = 4745)
     if datetime.strptime(birthdate,"%Y-%m-%d").date()> min:
@@ -71,7 +74,7 @@ def register():
     y = conn.execute(u).fetchone()
     conn.close()
     
-    if y is not  None:
+    if y is not None:
         flash('Email gia usata, riprova con un altra!', 'error') 
         return redirect('/signIn')
     
@@ -104,7 +107,7 @@ def account_info() :
     
     
                                  
-    resp = make_response(render_template("accountInfo.html", infoPersonali = u))
+    resp = make_response(render_template("/user/logged/accountInfo.html", infoPersonali = u))
     conn.close()
     return resp
 
@@ -128,31 +131,45 @@ def findUser(table, email, password, sel):
 @app.route("/loginClient", methods=['POST', 'GET'])
 def loginClient():
     if request.method == 'POST':
-        email = request.form.get("email")
-        password = request.form.get("password")
-        user = findUser(clients, email, password, [users])  
-        if user:
-            login_user(User(user.id, Role.CLIENT))
-            return render_template("success.html")#------------------------------------------------------------CAMBIARE RITORNO
-        flash('Email o password errate riprovare!', 'error')
-    return render_template("loginClient.html")
+        if not current_user.is_authenticated:
+            email = request.form.get("email")
+            password = request.form.get("password")
+            user = findUser(clients, email, password, [users])  
+            if user:
+                login_user(User(user.id, Role.CLIENT))
+                flash('Loggato correttamente', 'info')
+                return render_template("/user/shared/layout.html")
+            flash('Email o password errate riprovare!', 'error')
+        else:
+            flash('Sei già loggato', 'error')
+    return render_template("/user/noLogged/loginClient.html")
 
 #Giosuè Zannini
 @app.route("/loginManager", methods=['POST', 'GET'])
 def loginManager():
     if request.method == 'POST':
-        email = request.form.get("email")
-        password = request.form.get("password")
-        user = findUser(managers, email, password, [users, managers.c.admin])
-        if user:
-            if user.admin:
-                role = Role.ADMIN
-            else:
-                role = Role.SUPERVISOR
-            login_user(User(user.id, role))
-            return render_template("success.html")#------------------------------------------------------------CAMBIARE RITORNO
-        flash('Email o password errate riprovare!', 'error')
-    return render_template("loginManager.html")
+        if not current_user.is_authenticated: 
+            email = request.form.get("email")
+            password = request.form.get("password")
+            user = findUser(managers, email, password, [users, managers.c.admin])
+            if user:
+                if user.admin:
+                    role = Role.ADMIN
+                else:
+                    role = Role.SUPERVISOR
+                login_user(User(user.id, role))
+                return render_template("/manager/shared/layout.html")
+            flash('Email o password errate riprovare!', 'error')
+        else:
+            flash('Sei già loggato', 'error')        
+    return render_template("/manager/shared/loginManager.html")
+
+    #potrei fare che se admin vedo 
+    #               il bilancio
+    #               la possibilità di registrare menager
+    #               le tabelle 
+
+    #se manager vede le tabelle
 
 
 #luca
@@ -175,136 +192,11 @@ def change1():
         conn.close()
         return redirect("/updateCredit")
     else:
-        return render_template("updateCredit.html")
+        return render_template("/user/logged/updateCredit.html")
 
 
 
 
-
-#------------------------Shared function-----------------------#
-def queryAndTemplate(s, htmlTemplate):
-    conn = engine.connect()
-    result = conn.execute(s)
-    resp = make_response(render_template(htmlTemplate, result = result))
-    conn.close()
-    return resp
-
-def queryAndFun(s, nameFun):
-    conn = engine.connect()
-    result = conn.execute(s)
-    conn.close()
-    return redirect(url_for(nameFun))
-#--------------------------------------------------------------#
-#----------------------------SHOW TIME-------------------------#
-#dopo io dovrei dividere quelle passate da quelle non passate, con due visualizzazioni diverse
-@app.route("/listShowsTime")
-def listShowTime():
-    #mostro solo i film successivi 
-    s = select([movieSchedule.\
-            join(movies, movieSchedule.c.idMovie == movies.c.id).\
-            join(genres, genres.c.id == movies.c.idGenre)
-        ])
-    return queryAndTemplate(s, "listShowTime.html")
-
-@app.route("/insertShowTime",  methods=['GET','POST'])
-def insertShowTime():
-    if request.method == 'POST':
-        date = request.form.get('date')
-        price = request.form.get('price')
-        movie = request.form.get('movie')
-        theater = request.form.get('theater')
-        if date and price and movie and theater:
-            ins = movieSchedule.insert().\
-                values(dateTime = date, price = price, idMovie = movie, theater = theater)
-            flash("Spettacolo inserito con successo", 'info')
-            return queryAndFun(ins, 'listShowTime')
-        else:
-            flash('Dati mancanti', 'error')
-        #devo inserire nel database
-    s1 = select([theaters])#trovo tutte le sale
-    s2 = select([movies])#trovo tutti i film
-    conn = engine.connect()
-    th = conn.execute(s1)
-    mv = conn.execute(s2)
-    resp = make_response(render_template("insertShowTime.html", theaters = th, movies = mv))
-    conn.close()
-    return resp
-    
-#potrei fare juna remove dove gli do
-#posso dare una pagina per inserire
-#--------------------------------------------------------------#
-#---------------------------MOVIES-----------------------------#
-@app.route("/listMovies")       #mostra Tutti Film Inseriti per accedere devi essere un utendte di un certo tipo
-def listMovies():
-    s = select([movies.\
-            join(genres, genres.c.id == movies.c.idGenre)
-        ])
-    return queryAndTemplate(s, "listMovies.html")
-    
-
-#ho deciso di fare il controllo se il film è nel db o meno. Anche se non è nel db io segnalo che l'ho tolto. Ma non rombo l'integrità del db
-#prima di cancellare un film però devo controllare che non si siano delle proiezioni in programma.
-#TODO capire come mi devo comportare: ho pensato di mettere un radio button, dove indichi
-#   se ci sono programmazioni collegate non ancora avvenute, cancellale rifiuta operazione
-#   se ci sono programmazioni già avvenute, cancella o rifiuta operazione 
-@app.route('/removeMovie', methods=['POST', 'GET'])
-def removeMovie():                  #dovrei controllare che non ci siano date in programmazione
-    if request.method == 'POST':
-        id = request.form.get('id')
-        if id:
-            rem = movies.delete().\
-                where(movies.c.id == id)
-            flash("Il film è stato rimosso", 'info')                
-            return queryAndFun(rem, 'listMovies')
-        flash('Inserisci tutti i dati richiesti', 'error')
-    s = select([movies])
-    return queryAndTemplate(s, 'removeMovie.html')
-#-----------------------------------------------------------#
-#---------------------------SALE----------------------------#
-@app.route("/listTheaters")       #mostra Tutti sale
-def listTheaters():
-    s = select([theaters])
-    return queryAndTemplate(s, "listTheaters.html")
-
-
-@app.route("/insertTheater", methods=['GET', 'POST'])
-def insertTheater():
-    if request.method == 'POST':
-        capacity = request.form.get("capacity")
-        id = request.form.get('id')
-        if capacity and id and not theaterIsPresent(id):                     #verifico che mi abbiano passato i parametri e che non siano già registrate sale con lo stesso id
-            ins = theaters.insert().values(id = id, seatsCapacity=capacity)
-            flash("Theater insert with success!",'info' )
-            return queryAndFun(ins, 'listTheaters')
-        else:
-            if not capacity or not id:
-                flash("Dati mancanti",'error')
-            else:
-                flash('Theater number {} is already stored!'.format(id), 'error')
-    return render_template("insertTheater.html")
-
-def theaterIsPresent(id):                                                   #verifiche che il tetro con l'id passato sia presente del db torna boolean
-    s = select([theaters]).where(theaters.c.id == id)
-    conn = engine.connect()
-    result = conn.execute(s).fetchone()
-    conn.close()
-    return True if result else False 
-#prima di cancellare devo verificare che non ci siano spettacoli in quella sala
-@app.route("/removeTheater", methods=['GET', 'POST'])
-def removeTheater():
-    if request.method == 'POST':
-        id = request.form.get("id")
-        if id:                                         #verifico che id sia settato 
-            rem = theaters.delete().\
-                where(theaters.c.id == id)
-            flash('The theater {} has been removed with success'.format(id), 'info')
-            return queryAndFun(rem, 'listTheaters')
-        else:
-            flash('You have to insert the value to remove', 'error')
-    s = select([theaters])    
-    return queryAndTemplate(s, "removeTheater.html")
-
-#mancherebbe una funzione che fa l'update
 #-----------------------------------------------------------#
 app.route("/statistiche",  methods=['GET','POST'])
 def statistiche():

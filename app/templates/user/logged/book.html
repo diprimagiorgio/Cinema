@@ -1,0 +1,36 @@
+{% extends "/user/shared/layout.html" %}
+{% block body %}
+
+
+<div class="container mt-5">
+    <h1 style="text-align:center">Sala {{ infoTheater['id']}}</h1>
+    <form action="/book/{{idmovieSchedule}}" method="POST">
+        <p>
+        <table class="table mt-4">
+            <tr>
+        {% for i in range(infoTheater['seatsCapacity']) %}
+            {% if (i + 1) in seatsOccuped %}
+                    <td>XX<input type="checkbox" name="seat[{{i}}]" disabled="disabled"/></td>
+            {% else %}   
+                {% if (i + 1) < 10 %}
+                    <td>0{{ i + 1 }}<input type="checkbox" name="seat[{{i}}]" value="1"/></td>
+                {% else %}
+                    <td>{{ i + 1 }}<input type="checkbox" name="seat[{{i}}]" value="1"/></td>
+                {% endif %}
+            {% endif %}
+            {% if (i + 1) == infoTheater['seatsCapacity'] %}
+                </tr>   
+            {% elif (i + 1) % 10 == 0 %}
+                </tr>
+                <tr>
+            {% endif %}
+        {% endfor %}
+        </table>
+        <div style="text-align:center">
+            <button type="submit" class="btn btn-primary" >Conferma</button>
+        </div>
+        </p>
+    </form>
+</div>
+
+{% endblock %}
