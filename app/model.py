@@ -1,6 +1,15 @@
 from sqlalchemy import Table, Column, Integer, String, Float, Date, ForeignKey, CheckConstraint, DateTime, Boolean, column
 from app import metadata, engine
 from datetime import date
+
+
+
+    
+    
+
+
+
+
 #--------tabella
 users = Table( 'users', metadata,
             Column('id', Integer , primary_key = True, autoincrement=True),

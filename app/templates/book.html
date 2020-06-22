@@ -2,20 +2,20 @@
 {% block body %}
 
 
-<div class="container mt-5" align="center">
-    <h1>Sala {{ infoTheater['id']}}</h1>
+<div class="container mt-5">
+    <h1 style="text-align:center">Sala {{ infoTheater['id']}}</h1>
     <form action="/book/{{idmovieSchedule}}" method="POST">
         <p>
-        <table>
+        <table class="table mt-4">
             <tr>
         {% for i in range(infoTheater['seatsCapacity']) %}
             {% if (i + 1) in seatsOccuped %}
-                    <td width="5%">XX<input type="checkbox" name="seat[{{i}}]" disabled="disabled"/></td>
+                    <td>XX<input type="checkbox" name="seat[{{i}}]" disabled="disabled"/></td>
             {% else %}   
                 {% if (i + 1) < 10 %}
-                    <td width="5%">0{{ i + 1 }}<input type="checkbox" name="seat[{{i}}]" value="1"/></td>
+                    <td>0{{ i + 1 }}<input type="checkbox" name="seat[{{i}}]" value="1"/></td>
                 {% else %}
-                    <td width="5%">{{ i + 1 }}<input type="checkbox" name="seat[{{i}}]" value="1"/></td>
+                    <td>{{ i + 1 }}<input type="checkbox" name="seat[{{i}}]" value="1"/></td>
                 {% endif %}
             {% endif %}
             {% if (i + 1) == infoTheater['seatsCapacity'] %}
@@ -26,8 +26,9 @@
             {% endif %}
         {% endfor %}
         </table>
-        <br>
-        <button type="submit" class="btn btn-primary">Conferma</button>
+        <div style="text-align:center">
+            <button type="submit" class="btn btn-primary" >Conferma</button>
+        </div>
         </p>
     </form>
 </div>

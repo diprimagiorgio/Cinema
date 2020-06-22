@@ -5,7 +5,7 @@ from app.model import movies, genres, movieSchedule, theaters, booking
 from app import app, engine
 from app.login import login_required
 import datetime
-from app.functionForBooking import convertToFloat, convertToInt, createIntegerListFromQuery, createIntegerListFromString, removeElemInTemporaryList, KeyIsInTemporaryList, isNotInTemporaryList, addTemporaryListInList, startTimer, timerIsAlive
+from app.functionForBooking import createIntegerListFromQuery, createIntegerListFromString, removeElemInTemporaryList, KeyIsInTemporaryList, isNotInTemporaryList, addTemporaryListInList, startTimer, timerIsAlive, timerBookingInProgress, convertToInt
 
 
 
@@ -15,8 +15,11 @@ def choicemovie():
     if request.method == 'POST':
         choice = request.form.get("choice") #idmovieSchedule
         if choice:
-            return redirect(url_for("book", idmovieSchedule = choice))
-        flash('Effettuare una scelta', 'error')
+            if not timerBookingInProgress(current_user.get_id()):
+                return redirect(url_for("book", idmovieSchedule = choice))
+            flash("Hai già una prenotazione in corso", "error")
+        else:
+            flash('Effettuare una scelta', 'error')
     query = select([movieSchedule.\
             join(movies, movieSchedule.c.idMovie == movies.c.id).\
             join(genres, movies.c.idGenre == genres.c.id)]).\
@@ -53,7 +56,7 @@ def book(idmovieSchedule):
                 listOfBooking.append(i + 1) #popolo la lista
         if listOfBooking:#caso in cui ha scelto almeno un posto
             if isNotInTemporaryList(idmovieSchedule, listOfBooking):#caso in cui non ha scelto posti già in fase di prenotazione, vengono aggiunti alla temporary list
-                seconds = len(listOfBooking) * 30
+                seconds = len(listOfBooking) * 30 #tempo di prenotazione dato all'utente
                 startTimer(idmovieSchedule, listOfBooking, seconds, current_user.get_id())
                 flash("Hai a disposizione %d secondi per completare la prenotazione" % seconds,"info")
                 return redirect(url_for("completeBooking", idmovieSchedule = idmovieSchedule, listOfBooking = listOfBooking))
@@ -83,6 +86,12 @@ def book(idmovieSchedule):
 def completeBooking(idmovieSchedule, listOfBooking):
     #crea una lista di interi da una stringa contenente i posti da voler prenotare
     listOfBooking = createIntegerListFromString(listOfBooking)
+    conn = engine.connect()
+    query = select([movieSchedule.c.price]).\
+            where(movieSchedule.c.id == idmovieSchedule)
+    #mi torna il prezzo che deve pagare il cliente per la visione
+    price = conn.execute(query).fetchone()['price'] * len(listOfBooking)
+    conn.close() 
     if request.method == 'POST':  
         conn = engine.connect()
         query = select([movies.c.minimumAge, movieSchedule.c.theater]).\
@@ -110,30 +119,29 @@ def completeBooking(idmovieSchedule, listOfBooking):
             flash("Età minima non rispettata", "error")
         else:
             if timerIsAlive(current_user.get_id()): #caso in cui il thread è ancora attivo
-                #--------------------------FUNZIONE GIORGIO---------------------------
-                queryIns = [] #contiene le query
-                #creazione query
-                for i in range(len(listOfBooking)):
-                    queryIns.append(booking.insert().\
-                                    values(viewerName = viewer[i], viewerAge = viewerAge[i], seatNumber = listOfBooking[i], 
-                                           clientUsername = current_user.get_id(), idmovieSchedule = idmovieSchedule))
-                conn = engine.connect()            
-                #inserimento nel DB
-                for q in queryIns:
-                    conn.execute(q)
-                conn.close()    
-                #libero il posto dalla lista dei prenotanti
-                removeElemInTemporaryList(listOfBooking, idmovieSchedule)
-                flash("Prenotazione avvenuta con successo", "info")
+                #--------------------------FUNZIONE GIORGIO--------------------------
+                if (True): # pay(current_user.get_id(), price):----------------------------------------------------Da sistemare
+                    queryIns = [] #contiene le query
+                    #creazione query
+                    for i in range(len(listOfBooking)):
+                        queryIns.append(booking.insert().\
+                                        values(viewerName = viewer[i], viewerAge = viewerAge[i], seatNumber = listOfBooking[i], 
+                                               clientUsername = current_user.get_id(), idmovieSchedule = idmovieSchedule))
+                    conn = engine.connect()            
+                    #inserimento nel DB
+                    for q in queryIns:
+                        conn.execute(q)
+                    conn.close()    
+                    #libero il posto dalla lista dei prenotanti
+                    removeElemInTemporaryList(listOfBooking, idmovieSchedule)
+                    flash("Prenotazione avvenuta con successo", "info")       
+                else:
+                    flash("Credito insufficiente", "error")
             else: #caso in cui il tempo per la prenotazione è scaduto
                 flash("Tempo per la prenotazione scaduto", "error") 
             return redirect("/")
-    conn = engine.connect()
-    query = select([movieSchedule.c.price]).\
-            where(movieSchedule.c.id == idmovieSchedule)
-    #mi torna il prezzo che deve pagare il cliente per la visione
-    price = convertToFloat(str(conn.execute(query).fetchone())) * len(listOfBooking)
-    conn.close() 
     return render_template("completeBooking.html", listOfBooking = listOfBooking, idmovieSchedule = idmovieSchedule, price = price)
+
+
 
 
