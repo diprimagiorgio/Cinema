@@ -42,6 +42,50 @@ def logout():
     logout_user()
     return redirect(url_for('index'))
 
+@app.route('/registerManager',methods= ['GET','POST'])
+def registerManager():
+    if request.method == 'POST': 
+        
+        name = request.form.get("name")
+        print(name)
+        surname = request.form.get("surname")
+        email = request.form.get("email")
+        password = request.form.get("password")
+        if not name or not email or not password or not surname :
+            flash("Devi inserire tutti i dati")
+            return redirect ("/registerManager")
+        conn = engine.connect()
+        u = select([users]).where(users.c.email == email)#mi serve per contrallare che la mail inserita non sia gia stata utilizzata
+        y = conn.execute(u).fetchone()
+        conn.close()
+
+        if y is not None:
+            flash('Email gia usata, riprova con un altra!', 'error') 
+            return redirect('/registerManager')
+
+
+
+        conn = engine.connect()
+        ins = users.insert(None).values(name=name, surname = surname, email = email, password = password)    
+        conn.execute(ins)
+        conn.close()
+
+        conn = engine.connect()
+        query = select([users]).where(users.c.email == email)#mi serve per ritrovarmi l'ID corretto
+        ris = conn.execute(query).fetchone()
+        insmanager= managers.insert(None).values(id = ris.id,admin = False , financialReport=None)
+        conn.execute(insmanager)
+        conn.close()
+
+        return redirect("/")
+
+        
+
+    return render_template("/user/noLogged/registerManager.html")
+
+
+
+
 
 #luca
 @app.route('/register', methods =['POST'] )
@@ -70,7 +114,7 @@ def register():
         return redirect ("/signIn")
     
     conn = engine.connect()
-    u = select([users]).where(users.c.email == email)
+    u = select([users]).where(users.c.email == email)#mi serve per contrallare che la mail inserita non sia gia stata utilizzata
     y = conn.execute(u).fetchone()
     conn.close()
     

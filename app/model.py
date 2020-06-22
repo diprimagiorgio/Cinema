@@ -30,7 +30,7 @@ clients = Table( 'clients', metadata,
 managers = Table('managers', metadata,
                 Column('id', None , ForeignKey('users.id'), primary_key = True),
                 Column('admin', Boolean, nullable = False),
-                Column('financialReport', Float, nullable = False),
+                Column('financialReport', Float),
                 CheckConstraint(column('financialReport') >= 0, name='credit_mg_0')
             )
 

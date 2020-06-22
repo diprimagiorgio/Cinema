@@ -19,12 +19,9 @@ metadata = MetaData ()
 
 from app import login
 from app import routes
-<<<<<<< HEAD
 from app import statistiche
 
-=======
 from app.tableRoutes import movie, movieSchedule, theater, genre
 from app import initializer, pay
 #bisogna fare anche per genre
->>>>>>> master
 
