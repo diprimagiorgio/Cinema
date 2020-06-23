@@ -5,7 +5,6 @@ from app.model import users, movies, genres, movieSchedule, theaters, clients, m
 from datetime import date, timedelta , datetime
 from app import app, engine
 from app.login import User, Role, login_required, login_manager, findUser
-from app.routesBooking import choicemovie
 from sqlalchemy.sql.functions import now
 
 
@@ -179,7 +178,7 @@ def loginClient():
         if user:
             login_user(User(user.id, Role.CLIENT))
             flash('Loggato correttamente', 'info')
-            return render_template("/user/logged/choiceMovie.html")
+            return redirect("/choiceMovie")
         flash('Email o password errate riprovare!', 'error')
     return render_template("/user/noLogged/loginClient.html")
 
@@ -200,9 +199,9 @@ def loginManager():
                 role = Role.SUPERVISOR
             login_user(User(user.id, role))
             if current_user.role == Role.SUPERVISOR:
-                return render_template("/manager/shared/layout.html")
+                return render_template("/tables/menuTable.html")
             else:
-                return render_template("/manager/shared/layout.html")
+                return redirect("/financialReport")
         flash('Email o password errate riprovare!', 'error')       
     return render_template("/manager/shared/loginManager.html")
 

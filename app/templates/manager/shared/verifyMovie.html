@@ -1,10 +1,10 @@
-{% extends '/user/shared/layout.html' %}
+{% extends '/manager/shared/layout.html' %}
 
 {%block body%}
 
 <div class="container mt-5" style="text-align:center">
-  <h2>Film in visione</h2>
-  <form action="/choiceMovie" method="POST">
+  <h2>Prenotazioni</h2>
+  <form action="/verifyMovie" method="POST">
       <table class="table mt-4">
         <thead>
           <tr>
@@ -16,16 +16,13 @@
             <th scope="col">Età minima</th>
             <th scope="col">Sala</th>
             <th scope="col">Prezzo biglietto</th>
+            <th scope="col">Occupazione sala</th>
           </tr>
       </thead>
       <tbody> 
         {% for movie  in result %}
             <tr>
-              {% if current_user.is_anonymous %}
-                <td style="text-align:center"><a href="/loginClient" title="Login">X</a></td>
-              {% else %}
-                <td style="text-align:center"><input type="radio" name="choice" class="btn btn-primary" value="{{ movie.0 }}"/></td><!--Mi torna id dello spettacolo-->
-              {% endif %}
+                <td style="text-align:center"><input type="radio" name="choice" class="btn btn-primary" value="{{ movie['id'] }}"/></td><!--Mi torna id dello spettacolo-->
                 <td>{{ movie['dateTime'] }}</td>
                 <td>{{ movie['title'] }}</td>
                 <td>{{ movie['description'] }}</td>
@@ -33,6 +30,7 @@
                 <td>{{ movie['minimumAge'] }}</td>
                 <td>{{ movie['theater'] }}</td>
                 <td>{{ movie['price'] }}</td> 
+                <td>{{ movie['count'] }}/{{ movie['seatsCapacity'] }}</td> 
             </tr>
         {% endfor %}
     </tbody>

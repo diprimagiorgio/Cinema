@@ -3,7 +3,7 @@ from flask_login import current_user
 from sqlalchemy import insert, select, join, and_, bindparam
 from app import app, engine
 from app.login import login_required
-from app.model import movies, genres, movieSchedule, theaters, booking
+from app.model import movies, genres, movieSchedule, theaters, booking, users, clients
 from app.functionForBooking import createIntegerListFromQuery, createIntegerListFromString, removeElemInTemporaryList, KeyIsInTemporaryList, isNotInTemporaryList, addTemporaryListInList, startTimer, timerIsAlive, timerBookingInProgress, convertToInt
 from app.pay import pay
 import datetime
@@ -13,6 +13,8 @@ import datetime
 #Giosuè Zannini
 @app.route('/choiceMovie', methods = ['POST', 'GET'])
 def choicemovie():
+    if not current_user.is_authenticated:
+        flash("Autenticarsi per prenotare", "info")
     if request.method == 'POST':
         choice = request.form.get("choice") #idmovieSchedule
         if choice:
@@ -107,13 +109,25 @@ def completeBooking(idmovieSchedule, listOfBooking):
         minAge = True #gestisce l'età minima
         viewer = [] #nome spettatori
         viewerAge = [] #età spettatori
+        autoCompile = request.form.get("autoCompile") #spunta per inserimento automatico dei dati
+        print(autoCompile)#--------------------------------------------------
         for i in range(len(listOfBooking)):
-            viewer.append(request.form.get("viewer[" + str(i) + "]"))
-            viewerAge.append(convertToInt(request.form.get("viewerAge[" + str(i) + "]")))
-            if not viewer[i] or not viewerAge[i]:#caso informazioni mancanti
-                correct = False   
-            elif viewerAge[i] < minimumAge:#caso età minima non rispettata
-                minAge = False
+            if i == 0 and autoCompile:# caso in cui uso i dati dell'utente che sta prenotando
+                conn = engine.connect()
+                query = select([users.c.name, clients.c.birthDate]).\
+                        select_from(users.join(clients, users.c.id == clients.c.id)).\
+                            where(clients.c.id == current_user.get_id())
+                user = conn.execute(query).fetchone()
+                conn.close()
+                viewer.append(user["name"])
+                viewerAge.append(datetime.date.today().year - user["birthDate"].year)    
+            else:      
+                viewer.append(request.form.get("viewer[" + str(i) + "]"))
+                viewerAge.append(convertToInt(request.form.get("viewerAge[" + str(i) + "]")))
+                if not viewer[i] or not viewerAge[i]:#caso informazioni mancanti
+                    correct = False   
+                elif viewerAge[i] < minimumAge:#caso età minima non rispettata
+                    minAge = False
         if not correct:
             flash("Informazioni mancanti", "error")
         elif not minAge:
@@ -138,7 +152,3 @@ def completeBooking(idmovieSchedule, listOfBooking):
                 flash("Tempo per la prenotazione scaduto", "error") 
             return redirect("/")
     return render_template("/user/logged/completeBooking.html", listOfBooking = listOfBooking, idmovieSchedule = idmovieSchedule, price = price)
-
-
-
-

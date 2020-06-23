@@ -1,0 +1,32 @@
+{% extends "/manager/shared/layout.html" %}
+{% block body %}
+
+
+<div class="container mt-5">
+    <h1 style="text-align:center">Sala {{ infoTheater['id']}}</h1>
+        <p>
+        <table class="table mt-4">
+            <tr>
+        {% for i in range(infoTheater['seatsCapacity']) %}
+            {% if (i + 1) in seatsOccuped %}
+                    <td>XX</td>
+            {% else %}   
+                {% if (i + 1) < 10 %}
+                    <td>0{{ i + 1 }}</td>
+                {% else %}
+                    <td>{{ i + 1 }}</td>
+                {% endif %}
+            {% endif %}
+            {% if (i + 1) == infoTheater['seatsCapacity'] %}
+                </tr>   
+            {% elif (i + 1) % 10 == 0 %}
+                </tr>
+                <tr>
+            {% endif %}
+        {% endfor %}
+        </table>
+        </p>
+    </form>
+</div>
+
+{% endblock %}
