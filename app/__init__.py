@@ -22,6 +22,6 @@ from app import routes
 from app import statistiche
 
 from app.tableRoutes import movie, movieSchedule, theater, genre
-from app import initializer, pay
+from app import initializer, pay, routesBooking, verifyBooking
 #bisogna fare anche per genre
 

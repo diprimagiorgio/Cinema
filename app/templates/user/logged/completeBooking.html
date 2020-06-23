@@ -10,6 +10,9 @@
         <hr>
         <div class="form-group mt-2">    
             <p><h4>Posto numero {{x}}</h4></p>
+            {% if loop.index0 == 0 %}
+                <td><input type="checkbox" name="autoCompile" value="true"/>Utilizzare i propri dati utente</td>
+            {% endif %}
             <div class="form-group mt-2">
                 <label>Name</label>
                 <input type="text" class="form-control" placeholder="Inserire nome" name="viewer[{{ loop.index0 }}]">
