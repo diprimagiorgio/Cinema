@@ -1,7 +1,7 @@
 from flask_login import LoginManager, UserMixin, current_user
 from app import app, engine
 from enum import IntEnum
-from sqlalchemy import select
+from sqlalchemy import select, and_
 from app.model import users, clients, managers
 from functools import wraps
 from flask import redirect, flash
@@ -29,6 +29,20 @@ class Role(IntEnum):
     SUPERVISOR = 1
     ADMIN = 2
     
+    
+    
+#Giosuè Zannini
+#------------------------Shared function Login-----------------------#
+
+def findUser(table, email, password, sel):
+    conn = engine.connect()
+    query = select(sel).\
+            select_from(users.join(table)).\
+            where(and_(users.c.email == email, users.c.password == password))
+    user = conn.execute(query).fetchone()            #ritorna none se non contiene nessuna riga
+    conn.close()
+    return user
+#--------------------------------------------------------------#
 
 
 
@@ -37,22 +51,20 @@ class Role(IntEnum):
 @login_manager.user_loader
 def load_user(user_id):
     conn = engine.connect()
-    query = select([users]).\
-            select_from(users.join(clients)).\
-            where(users.c.id == user_id)
+    query = select([clients]).\
+            where(clients.c.id == user_id)
     result = conn.execute(query).fetchone()
     role = Role.CLIENT
     if not result:
-        query = select([users, managers.c.admin]).\
-                select_from(users.join(managers)).\
-                where(users.c.id == user_id)
+        query = select([managers]).\
+                where(managers.c.id == user_id)
         result = conn.execute(query).fetchone()
-        if result['admin'] == True:
+        if result['admin']:
             role = Role.ADMIN
         else:
             role = Role.SUPERVISOR
     conn.close()
-    return User(result.id, role)
+    return User(result['id'], role)
 
 
 

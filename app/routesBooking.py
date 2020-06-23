@@ -1,12 +1,12 @@
 from flask import redirect, render_template, request, make_response, url_for, flash
-from sqlalchemy import insert, select, join, and_, bindparam
 from flask_login import current_user
-from app.model import movies, genres, movieSchedule, theaters, booking
+from sqlalchemy import insert, select, join, and_, bindparam
 from app import app, engine
 from app.login import login_required
-import datetime
+from app.model import movies, genres, movieSchedule, theaters, booking
 from app.functionForBooking import createIntegerListFromQuery, createIntegerListFromString, removeElemInTemporaryList, KeyIsInTemporaryList, isNotInTemporaryList, addTemporaryListInList, startTimer, timerIsAlive, timerBookingInProgress, convertToInt
 from app.pay import pay
+import datetime
 
 
 
@@ -122,22 +122,18 @@ def completeBooking(idmovieSchedule, listOfBooking):
             if timerIsAlive(current_user.get_id()): #caso in cui il thread è ancora attivo
                 #--------------------------FUNZIONE GIORGIO--------------------------
                 if pay(current_user.get_id(), price):
-                    queryIns = [] #contiene le query
-                    #creazione query
-                    for i in range(len(listOfBooking)):
-                        queryIns.append(booking.insert().\
-                                        values(viewerName = viewer[i], viewerAge = viewerAge[i], seatNumber = listOfBooking[i], 
-                                               clientUsername = current_user.get_id(), idmovieSchedule = idmovieSchedule))
                     conn = engine.connect()            
-                    #inserimento nel DB
-                    for q in queryIns:
-                        conn.execute(q)
+                    #creazione query e inserimento del DB
+                    for i in range(len(listOfBooking)):
+                        query = (booking.insert().\
+                                        values(viewerName = bindparam('viewer'), viewerAge = bindparam('viewerAge'), seatNumber = bindparam('seatNumber'), 
+                                               clientUsername = current_user.get_id(), idmovieSchedule = bindparam('idmovieSchedule')))
+                        conn.execute(query, {'viewer' : viewer[i], 'viewerAge' : viewerAge[i], 'seatNumber' : listOfBooking[i], 'idmovieSchedule' : idmovieSchedule})
                     conn.close()    
-                    #libero il posto dalla lista dei prenotanti
-                    removeElemInTemporaryList(listOfBooking, idmovieSchedule)
                     flash("Prenotazione avvenuta con successo", "info")       
                 else:
                     flash("Credito insufficiente", "error")
+                removeElemInTemporaryList(listOfBooking, idmovieSchedule) #rimuove dalla lista dei temporanei i posti di questo utente
             else: #caso in cui il tempo per la prenotazione è scaduto
                 flash("Tempo per la prenotazione scaduto", "error") 
             return redirect("/")
