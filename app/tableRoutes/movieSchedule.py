@@ -93,10 +93,11 @@ def insertShowTime():
         else:
             flash('Dati mancanti', 'error')
         #devo inserire nel database
-    th = selectTheaters()#trovo tutte le sale
+    s1 = selectTheaters#trovo tutte le sale
     s2 = select([movies])#trovo tutti i film
     conn = engine.connect()
     mv = conn.execute(s2)
+    th = conn.execute(s1)
     resp = make_response(render_template("/tables/movieSchedule/insertShowTime.html", theaters = th, movies = mv))
     conn.close()
     return resp
@@ -104,6 +105,6 @@ def insertShowTime():
 #potrei fare juna remove dove gli do
 #posso dare una pagina per inserire
 #---------------------------------DELETE---------------------------------#
-#TODO
+#TODO posso cancellare solo vuoti senza programmazioni in futuro... Potrei anche dirie di no
 #---------------------------------UPDATE---------------------------------#
-#TODO
+#TODO posso monificare (Solo futuri??)

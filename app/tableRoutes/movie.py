@@ -1,5 +1,5 @@
 from app import app, engine
-from sqlalchemy import insert, select, outerjoin, delete, bindparam
+from sqlalchemy import insert, select, outerjoin, delete, bindparam, and_
 from flask import  request, flash, redirect, url_for, render_template
 from app.model import movies, genres, movieSchedule
 from .shared import queryAndTemplate, queryAndFun, queryHasResult
@@ -38,23 +38,18 @@ def insertMovie():
     return queryAndTemplate(s,"/tables/movie/insertMovie.html")
 
 #---------------------------------DELETE---------------------------------#
-# ho deciso di fare il controllo se il film è nel db o meno.
-# Anche se non è nel db io segnalo che l'ho tolto. Ma non rombo l'integrità del db
 #
-#riflettendo cancellare un movie schedule vuol film con associati un movie schedule vuol dire, anche cancellare il 
-# movieSchedule associato ma questo è associato a delle prenotazioni, se cancello anche quelle
-#divrei anche restituirei i soldi....
-# TODO opzioni di cancellazione TUTTO DA SISTEMARE
+# TODO opzioni di cancellazione ANDREBBE FATTO CON TRANSACTION PER ATOMICITÀ CON LA SELECT. Penso a vincoloi a livello di db.
+# Penso al caso in cui vedo che non c'è nessuna programmazione collegata ma poi ne aggiunge una. Che succede ? 
 """
-Faccio come con le sale 
-    Io posso cancellare un film se
+    Scenari possibili
             - se non ci sono spettacoli collegati posso eliminare
-            - se ci fossero spettacoli in passato, metto disabilitato il film
+            - se ci fossero spettacoli in passato, metto disabilitato il film, quindi non è più nell'elenco di quelli per la programmazione
             - se ci saranno spettacoli in futuro, non posso cancellare
 """
 @app.route('/removeMovie', methods=['POST', 'GET'])
 @login_required(Role.SUPERVISOR)
-def removeMovie():                  #dovrei controllare che non ci siano date in programmazione
+def removeMovie():                  
     if request.method == 'POST':
         id = request.form.get('id')
         if id:
@@ -88,39 +83,6 @@ def removeMovie():                  #dovrei controllare che non ci siano date in
                 flash("Film rimossa!", 'info')
                 return queryAndFun(rm, 'listMovies', {'id' : id})
         
-
-
-
-
-
-
-
-
-
-
-
-
-    #        if opz == '1':
-    #            sel = select([movieSchedule]).\
-    #                where(movieSchedule.c.idMovie == bindparam('id'))
-    #            if queryHasResult(sel, {'id' : id}):         # ci sono film programmati
-    #                flash('Ci sono spettacoli colleagti a questo film, cambiare impostazione cancellazione', 'error')
-    #                return redirect(url_for('removeMovie'))
-    #        elif opz == '2':
-    #            sel = select([movieSchedule]).\
-    #                where(
-    #                    and_( movieSchedule.c.idMovie == bindparam('id'),
-    #                          movieSchedule.c.dateTime >= datetime.today()
-    #                    )
-    #                )
-    #            if queryHasResult(sel, {'id' : id}):         # ci sono film programmati per il futuro
-    #                flash('Ci sono spettacoli colleagti a questo film FUTURI, cambiare impostazione cancellazione', 'error')
-    #                return redirect(url_for('removeMovie'))
-#
-    #        rem = movies.delete().\
-    #            where(movies.c.id == bindparam('id'))
-    #        flash("Il film è stato rimosso", 'info')                
-    #        return queryAndFun(rem, 'listMovies', {'id' : id})
         else:    
             flash('Inserisci tutti i dati richiesti', 'error')
 
@@ -142,9 +104,10 @@ def selectMovieToUpdate():
             return render_template("/tables/movie/modifyMovie.html", genres = r2, movie = r1)
         else:
             flash('Inserire i dati richiesti !', 'error')
-#potrei fare solo movies?
+
+#TODO da sistemare se non riesco per quel cazzo di id doppio uso il from, il problema è il doppio id, sarebbe meglio usare selectMovie
     s = select([movies.c.id, movies.c.title, movies.c.duration, movies.c.minimumAge, genres.c.description]).\
-            where( movies.c.idGenre == genres.c.id)
+            where( and_( movies.c.idGenre == genres.c.id, movies.c.available ==True))
     return queryAndTemplate(s, "/tables/movie/updateMovie.html")
 
 @app.route('/modifyMovie/<movieID>', methods=['POST'])
