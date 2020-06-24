@@ -54,7 +54,7 @@ def searchInList(l, elem):
 
 #----------------------------Funzioni per la lista temporanea
 
- #rimuove a lista dei posti del singolo utente
+ #rimuove la lista dei posti del singolo utente
 def removeElemInTemporaryList(listOfBooking, idmovieSchedule):
     for elem in listOfBooking:
         temporaryBooking[idmovieSchedule].remove(elem)  
@@ -64,7 +64,7 @@ def KeyIsInTemporaryList(idmovieSchedule):
     if not (idmovieSchedule in temporaryBooking):
         temporaryBooking[idmovieSchedule] = []
 
- #se non la lista dell'utente non ha nulla in comune aggiungila e ritorna true, altrimenti torna false
+ #se la lista dell'utente non ha nulla in comune aggiungila e ritorna true, altrimenti torna false
 def isNotInTemporaryList(idmovieSchedule, listOfBooking):
     check = True
     for elem in temporaryBooking[idmovieSchedule]: #controlla se c'è già qualcuno che sta prenotando questi posti
@@ -119,7 +119,7 @@ def timerIsAlive(current_user):
         (timeOutBooking.get(current_user)[0]).join()
     timeOutBooking.pop(current_user)
     return alive
-
+ #verifica se c'è già una prenotazione in corso per questo utente
 def timerBookingInProgress(current_user):
     if timeOutBooking.get(current_user):
         return timeOutBooking.get(current_user)[1]

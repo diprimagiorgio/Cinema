@@ -5,12 +5,14 @@ from app.model import movies, movieSchedule, genres, theaters
 from .shared import queryAndTemplate, queryAndFun
 from .theater import selectTheaters
 from datetime import datetime, timedelta
+from app.login import Role, login_required
 
 
 #---------------------------------SELECT---------------------------------#
 
 #dopo io dovrei dividere quelle passate da quelle non passate, con due visualizzazioni diverse
 @app.route("/futureShowsTime")
+@login_required(Role.SUPERVISOR)
 def futureEvents():
     #mostro solo i film successivi 
     s = select([movieSchedule.\
@@ -20,6 +22,7 @@ def futureEvents():
     return queryAndTemplate(s, "/tables/movieSchedule/listShowTime.html", otherPar = ["Passata", "/pastShowsTime",""])
 
 @app.route("/pastShowsTime")
+@login_required(Role.SUPERVISOR)
 def pastEvents():
     s = select([movieSchedule.\
             join(movies, movieSchedule.c.idMovie == movies.c.id).\
@@ -28,6 +31,7 @@ def pastEvents():
     return queryAndTemplate(s, "/tables/movieSchedule/listShowTime.html", otherPar = ["Futura", "/futureShowsTime", "passata"])
 
 @app.route("/listShowsTime")#per compatibilitàà con il codice precedente
+@login_required(Role.SUPERVISOR)
 def listShowTime():
     #mostro solo i film successivi 
     s = select([movieSchedule.\
@@ -39,6 +43,7 @@ def listShowTime():
 #---------------------------------INSERT---------------------------------#
 #dovrei acnhe controllare che si inserisca una data futura
 @app.route("/insertShowTime",  methods=['GET','POST'])
+@login_required(Role.SUPERVISOR)
 def insertShowTime():
     if request.method == 'POST':
         date = request.form.get('date')
@@ -88,10 +93,11 @@ def insertShowTime():
         else:
             flash('Dati mancanti', 'error')
         #devo inserire nel database
-    th = selectTheaters()#trovo tutte le sale
+    s1 = selectTheaters#trovo tutte le sale
     s2 = select([movies])#trovo tutti i film
     conn = engine.connect()
     mv = conn.execute(s2)
+    th = conn.execute(s1)
     resp = make_response(render_template("/tables/movieSchedule/insertShowTime.html", theaters = th, movies = mv))
     conn.close()
     return resp
@@ -99,6 +105,6 @@ def insertShowTime():
 #potrei fare juna remove dove gli do
 #posso dare una pagina per inserire
 #---------------------------------DELETE---------------------------------#
-#TODO
+#TODO posso cancellare solo vuoti senza programmazioni in futuro... Potrei anche dirie di no
 #---------------------------------UPDATE---------------------------------#
-#TODO
+#TODO posso monificare (Solo futuri??)

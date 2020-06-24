@@ -2,10 +2,10 @@
 {% block navBar %}
   {% if current_user.role == 2 %}
     <li class="nav-item ml-3">
-      <a class="nav-link" href="/registerManager">Registra Menager</a>
+      <a class="nav-link" href="/registerManager">Registra gestore</a>
     </li>
     <li class="nav-item ml-3">
-      <a class="nav-link" href="/#">Bilancio</a>
+      <a class="nav-link" href="/financialReport">Bilancio</a>
     </li>
     
   {% endif %}
@@ -16,6 +16,9 @@
     <a class="nav-link" href="/statistiche1">Statistiche</a>
   </li>
   
+  <li class="nav-item ml-3">
+    <a class="nav-link" href="/verifyMovie">Prenotazioni</a>
+  </li>
   <li class="nav-item ml-3">
     <a class="nav-link" href="/logout">Logout</a>
   </li>

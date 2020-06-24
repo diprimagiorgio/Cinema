@@ -1,18 +1,20 @@
 from flask import redirect, render_template, request, make_response, url_for, flash
-from sqlalchemy import insert, select, join, and_, bindparam
 from flask_login import current_user
-from app.model import movies, genres, movieSchedule, theaters, booking
+from sqlalchemy import insert, select, join, and_, bindparam
 from app import app, engine
 from app.login import login_required
-import datetime
+from app.model import movies, genres, movieSchedule, theaters, booking, users, clients
 from app.functionForBooking import createIntegerListFromQuery, createIntegerListFromString, removeElemInTemporaryList, KeyIsInTemporaryList, isNotInTemporaryList, addTemporaryListInList, startTimer, timerIsAlive, timerBookingInProgress, convertToInt
 from app.pay import pay
+import datetime
 
 
 
 #Giosuè Zannini
 @app.route('/choiceMovie', methods = ['POST', 'GET'])
 def choicemovie():
+    if not current_user.is_authenticated:
+        flash("Autenticarsi per prenotare", "info")
     if request.method == 'POST':
         choice = request.form.get("choice") #idmovieSchedule
         if choice:
@@ -107,13 +109,25 @@ def completeBooking(idmovieSchedule, listOfBooking):
         minAge = True #gestisce l'età minima
         viewer = [] #nome spettatori
         viewerAge = [] #età spettatori
+        autoCompile = request.form.get("autoCompile") #spunta per inserimento automatico dei dati
+        print(autoCompile)#--------------------------------------------------
         for i in range(len(listOfBooking)):
-            viewer.append(request.form.get("viewer[" + str(i) + "]"))
-            viewerAge.append(convertToInt(request.form.get("viewerAge[" + str(i) + "]")))
-            if not viewer[i] or not viewerAge[i]:#caso informazioni mancanti
-                correct = False   
-            elif viewerAge[i] < minimumAge:#caso età minima non rispettata
-                minAge = False
+            if i == 0 and autoCompile:# caso in cui uso i dati dell'utente che sta prenotando
+                conn = engine.connect()
+                query = select([users.c.name, clients.c.birthDate]).\
+                        select_from(users.join(clients, users.c.id == clients.c.id)).\
+                            where(clients.c.id == current_user.get_id())
+                user = conn.execute(query).fetchone()
+                conn.close()
+                viewer.append(user["name"])
+                viewerAge.append(datetime.date.today().year - user["birthDate"].year)    
+            else:      
+                viewer.append(request.form.get("viewer[" + str(i) + "]"))
+                viewerAge.append(convertToInt(request.form.get("viewerAge[" + str(i) + "]")))
+                if not viewer[i] or not viewerAge[i]:#caso informazioni mancanti
+                    correct = False   
+                elif viewerAge[i] < minimumAge:#caso età minima non rispettata
+                    minAge = False
         if not correct:
             flash("Informazioni mancanti", "error")
         elif not minAge:
@@ -122,27 +136,19 @@ def completeBooking(idmovieSchedule, listOfBooking):
             if timerIsAlive(current_user.get_id()): #caso in cui il thread è ancora attivo
                 #--------------------------FUNZIONE GIORGIO--------------------------
                 if pay(current_user.get_id(), price):
-                    queryIns = [] #contiene le query
-                    #creazione query
-                    for i in range(len(listOfBooking)):
-                        queryIns.append(booking.insert().\
-                                        values(viewerName = viewer[i], viewerAge = viewerAge[i], seatNumber = listOfBooking[i], 
-                                               clientUsername = current_user.get_id(), idmovieSchedule = idmovieSchedule))
                     conn = engine.connect()            
-                    #inserimento nel DB
-                    for q in queryIns:
-                        conn.execute(q)
+                    #creazione query e inserimento del DB
+                    for i in range(len(listOfBooking)):
+                        query = (booking.insert().\
+                                        values(viewerName = bindparam('viewer'), viewerAge = bindparam('viewerAge'), seatNumber = bindparam('seatNumber'), 
+                                               clientUsername = current_user.get_id(), idmovieSchedule = bindparam('idmovieSchedule')))
+                        conn.execute(query, {'viewer' : viewer[i], 'viewerAge' : viewerAge[i], 'seatNumber' : listOfBooking[i], 'idmovieSchedule' : idmovieSchedule})
                     conn.close()    
-                    #libero il posto dalla lista dei prenotanti
-                    removeElemInTemporaryList(listOfBooking, idmovieSchedule)
                     flash("Prenotazione avvenuta con successo", "info")       
                 else:
                     flash("Credito insufficiente", "error")
+                removeElemInTemporaryList(listOfBooking, idmovieSchedule) #rimuove dalla lista dei temporanei i posti di questo utente
             else: #caso in cui il tempo per la prenotazione è scaduto
                 flash("Tempo per la prenotazione scaduto", "error") 
             return redirect("/")
     return render_template("/user/logged/completeBooking.html", listOfBooking = listOfBooking, idmovieSchedule = idmovieSchedule, price = price)
-
-
-
-
