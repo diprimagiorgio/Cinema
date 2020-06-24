@@ -1,43 +1,43 @@
 from flask import redirect, render_template, request, make_response, url_for, flash
-from sqlalchemy import insert, select, join, delete, and_, func 
-from flask_login import LoginManager, UserMixin, current_user, login_user, logout_user
+from sqlalchemy import select, join, and_, func ,bindparam
 from app.model import users, movies, genres, movieSchedule, theaters, clients, managers, booking
 from datetime import date, timedelta , datetime
 from app import app, engine
-from app.login import User, Role, login_required, login_manager
 import datetime
-from app.routesBooking import choicemovie
-from sqlalchemy.sql.functions import now
 
 @app.route("/statistiche1")
 def statistiche1():
-    return render_template("statistiche1.html")
+    return render_template("/manager/statistiche/statistiche1.html")
 
 
 #query per sapere il numero di prenotazioni associate ad un genere ed eta' media dei partecipanti
 @app.route("/numeroPrenotazioniPerGenere")
 def query1():
     
-    s = booking.join(movieSchedule, booking.c.idmovieSchedule == movieSchedule.c.id).join(movies, movieSchedule.c.idMovie == movies.c.id).join(genres,movies.c.idGenre == genres.c.id)
-    queryCount = select([genres.c.description,func.count(booking.c.id).label('numero'),func.avg(booking.c.viewerAge).label('avgAge')]).select_from(s).group_by(genres.c.description)
+    s = booking.join(movieSchedule, booking.c.idmovieSchedule == movieSchedule.c.id).\
+        join(movies, movieSchedule.c.idMovie == movies.c.id).join(genres,movies.c.idGenre == genres.c.id)
+    queryCount = select([genres.c.description,func.count(booking.c.id).label('numero'),func.avg(booking.c.viewerAge).label('avgAge')]).\
+        select_from(s).group_by(genres.c.description)
     
     conn = engine.connect()
     ris1 = conn.execute(queryCount).fetchall()
     print(ris1)
     conn.close()
-    return render_template("statGenere.html",numeroPrenotazioni = ris1)
+    return render_template("/manager/statistiche/statGenere.html",numeroPrenotazioni = ris1)
 
 @app.route("/saldoPerFilm")
 def query2():
     conn = engine.connect()
     #incasso per film
-    s = booking.join(movieSchedule, booking.c.idmovieSchedule == movieSchedule.c.id).join(movies, movieSchedule.c.idMovie == movies.c.id)
-    querynumeroPrenotazioni = select([movies.c.title,func.sum(movieSchedule.c.price).label('sum')]).select_from(s).group_by(movies.c.title).order_by(movies.c.title)
+    s = booking.join(movieSchedule, booking.c.idmovieSchedule == movieSchedule.c.id).\
+        join(movies, movieSchedule.c.idMovie == movies.c.id)
+    querynumeroPrenotazioni = select([movies.c.title,func.sum(movieSchedule.c.price).label('sum')]).\
+        select_from(s).group_by(movies.c.title).order_by(movies.c.title)
 
     ris = conn.execute(querynumeroPrenotazioni).fetchall()
     print(ris)
     conn.close()
-    return render_template("saldoFilm.html", saldo = ris)
+    return render_template("/manager/statistiche/saldoFilm.html", saldo = ris)
 
 
 @app.route("/occupazioneSalaPerFilm",methods=['GET','POST'])
@@ -52,52 +52,46 @@ def query3():
 
                 conn = engine.connect()
                 #numeri di posti prenotati per sala per film
-                
+                nposti= select([theaters.c.seatsCapacity]).where(theaters.c.id == bindparam('sala'))
                 unasettimana = select([func.count(booking.c.id).label('count')]).\
-                    select_from(booking.join(movieSchedule, booking.c.idmovieSchedule == movieSchedule.c.id).join(movies,movieSchedule.c.idMovie == movies.c.id)).\
+                    select_from(booking.join(movieSchedule, booking.c.idmovieSchedule == movieSchedule.c.id).\
+                        join(movies,movieSchedule.c.idMovie == movies.c.id)).\
                         where(
-                            and_(movieSchedule.c.idMovie == film,
-                                  movieSchedule.c.theater == sala, movieSchedule.c.dateTime >= settimana)
+                            and_(movieSchedule.c.idMovie == bindparam('film'),#controlla che funzioni bene la clausola where , datetime.now()???
+                                  movieSchedule.c.theater == bindparam('sala'), date.today() >= movieSchedule.c.dateTime, movieSchedule.c.dateTime >= settimana)
                             )
                 duesettimane = select([func.count(booking.c.id).label('count')]).\
-                    select_from(booking.join(movieSchedule, booking.c.idmovieSchedule == movieSchedule.c.id).join(movies,movieSchedule.c.idMovie == movies.c.id)).\
+                    select_from(booking.join(movieSchedule, booking.c.idmovieSchedule == movieSchedule.c.id).\
+                        join(movies,movieSchedule.c.idMovie == movies.c.id)).\
                         where(
-                            and_(movieSchedule.c.idMovie == film,
-                                  movieSchedule.c.theater == sala, movieSchedule.c.dateTime >= duesettimane)
+                            and_(movieSchedule.c.idMovie == bindparam('film'),
+                                  movieSchedule.c.theater == bindparam('sala'), date.today() >= movieSchedule.c.dateTime,movieSchedule.c.dateTime >= duesettimane)
                             )
                 unmese = select([func.count(booking.c.id).label('count')]).\
-                    select_from(booking.join(movieSchedule, booking.c.idmovieSchedule == movieSchedule.c.id).join(movies,movieSchedule.c.idMovie == movies.c.id)).\
+                    select_from(booking.join(movieSchedule, booking.c.idmovieSchedule == movieSchedule.c.id).\
+                        join(movies,movieSchedule.c.idMovie == movies.c.id)).\
                         where(
-                            and_(movieSchedule.c.idMovie == film,
-                                  movieSchedule.c.theater == sala, movieSchedule.c.dateTime >= mese)
+                            and_(movieSchedule.c.idMovie == bindparam('film'),
+                                  movieSchedule.c.theater == bindparam('sala'), date.today() >= movieSchedule.c.dateTime,movieSchedule.c.dateTime >= mese)
                             )
-                ris1 = conn.execute(unasettimana).fetchone()
-                ris2 = conn.execute(duesettimane).fetchone()
-                ris3 = conn.execute(unmese).fetchone()
-                
-                print("--------- "'%s')
-                print(ris1['count']) #risposta da mandare ad un html
-                print(ris2['count']) #risposta da mandare ad un html
-                print(ris3['count']) #risposta da mandare ad un html
+                posti = conn.execute(nposti,{'sala': sala}).fetchone()
+                ris1 = conn.execute(unasettimana,{'sala': sala, 'film': film}).fetchone()
+                ris2 = conn.execute(duesettimane,{'sala': sala, 'film': film}).fetchone()
+                ris3 = conn.execute(unmese,{'sala': sala, 'film': film}).fetchone()
                 
                 conn.close()
-                return render_template("resultOccupazioneSala.html", sala = sala, settimana = ris1['count'], duesettimane= ris2['count'], mese = ris3['count'])
+                return render_template("/manager/statistiche/resultOccupazioneSala.html", sala = sala,\
+                     posti = posti['seatsCapacity'] ,film = film, settimana = ris1['count'],\
+                          duesettimane= ris2['count'], mese = ris3['count'])
                 
-                
-                
-                
-                
-                
-                
-                
-            
+               
     s3 = select([theaters])#trovo tutte le sale
     s41 = movieSchedule.join(movies, movieSchedule.c.idMovie== movies.c.id)
     s4 = select([func.distinct(movies.c.id).label('id'),movies.c.title]).select_from(s41).order_by(movies.c.title)#trovo solo i film con prenotazioni mi manca il count distinct 
     conn = engine.connect()
     sale = conn.execute(s3)
     film = conn.execute(s4)
-    resp = make_response(render_template("occupazioneSala.html", theaters = sale, movies = film ))
+    resp = make_response(render_template("/manager/statistiche/occupazioneSala.html", theaters = sale, movies = film ))
     conn.close()
     return resp
 
