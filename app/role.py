@@ -1,11 +1,34 @@
-from sqlalchemy import insert, text
-from app.model import genres, movies, theaters, movieSchedule, booking
+from sqlalchemy import insert, select
+from app.model import users, managers
 from app import app, engine
-from datetime import date
+from app.initializer import initializer
+from flask import redirect, flash
 
-@app.route("/initRole")
+@app.route("/init")
+def init():
+    initRole()
+    initAdmin()
+    initializer()
+    flash("Database inizializzato correttamente", "info")
+    return redirect('/')
+
+
+
+def initAdmin():
+    ins = users.insert().values(name="Admin", surname ="Admin", email ="admin@admin.com", password = "secret")    
+    
+    conn = engine.connect()
+    conn.execute(ins)
+
+    query = select([users]).where(users.c.email == "admin@admin.com")#mi serve per ritrovarmi l'ID corretto
+    ris = conn.execute(query).fetchone()
+
+    ins = managers.insert().values(id = ris.id , admin = True , financialReport=0)
+    conn.execute(ins)
+    conn.close()
+
 def initRole():
-    #-------------------------------ROLE E USER userNotLogged-----------------------------------------#
+     #-------------------------------ROLE E USER userNotLogged-----------------------------------------#
     conn = engine.connect()
     conn.execute("""
             CREATE ROLE "role_userNotLogged";
@@ -53,6 +76,4 @@ def initRole():
            GRANT role_manager TO manager; 
             """)
     conn.close()
-    #----------------------------------------------------
-    return "OK"
 
