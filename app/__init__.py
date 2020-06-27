@@ -14,6 +14,9 @@ engine = create_engine(
     'postgresql://admin:secret@localhost/cinemaIlMolo',
     isolation_level='REPEATABLE_READ'
 )
+
+
+
 metadata = MetaData ()
 
 

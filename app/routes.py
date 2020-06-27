@@ -5,6 +5,7 @@ from app.model import users, movies, genres, movieSchedule, theaters, clients, m
 from datetime import date, timedelta , datetime
 from app import app, engine
 from app.login import User, Role, login_required, login_manager, findUser
+from app.engineFunc import choiceEngine
 from sqlalchemy.sql.functions import now
 
 
@@ -32,7 +33,7 @@ def dataBase():
 def financialReport():
     sel = select([managers]).\
             where( managers.c.admin == True)
-    conn = engine.connect()
+    conn = choiceEngine()
     res = conn.execute(sel).fetchone()
     conn.close()
     return render_template("/manager/admin/financialReport.html", result = res)
@@ -63,7 +64,7 @@ def registerManager():
         if not name or not email or not password or not surname :
             flash("Devi inserire tutti i dati")
             return redirect ("/registerManager")
-        conn = engine.connect()
+        conn = choiceEngine()
         u = select([users]).where(users.c.email == email)#mi serve per contrallare che la mail inserita non sia gia stata utilizzata
         y = conn.execute(u).fetchone()
         conn.close()
@@ -74,12 +75,12 @@ def registerManager():
 
 
 
-        conn = engine.connect()
+        conn = choiceEngine()
         ins = users.insert(None).values(name=name, surname = surname, email = email, password = password)    
         conn.execute(ins)
         conn.close()
 
-        conn = engine.connect()
+        conn = choiceEngine()
         query = select([users]).where(users.c.email == email)#mi serve per ritrovarmi l'ID corretto
         ris = conn.execute(query).fetchone()
         insmanager= managers.insert(None).values(id = ris.id,admin = False , financialReport=None)
@@ -104,15 +105,6 @@ def register():
     email = request.form.get("email")
     password = request.form.get("password")
     birthdate = request.form.get("birthdate")
-    
-    
-    
-    
-    
-    
-    
-    
-    
     if not name or not email or not password or not birthdate or not surname :
         flash("Devi inserire tutti i dati")
         return redirect ("/signIn")
@@ -122,7 +114,8 @@ def register():
         flash("Inserisci una data di compleanno valida","error")
         return redirect ("/signIn")
     
-    conn = engine.connect()
+    #conn = engine.connect()
+    conn = choiceEngine()#-------------------------------------------------------
     u = select([users]).where(users.c.email == email)#mi serve per contrallare che la mail inserita non sia gia stata utilizzata
     y = conn.execute(u).fetchone()
     conn.close()
@@ -133,12 +126,12 @@ def register():
     
     
     
-    conn = engine.connect()
+    conn = choiceEngine()
     ins = users.insert(None).values(name=name, surname = surname, email = email, password = password)    
     conn.execute(ins)
     conn.close()
     
-    conn = engine.connect()
+    conn = choiceEngine()
     query = select([users]).where(users.c.email == email)
     ris = conn.execute(query).fetchone()
     insclients= clients.insert(None).values(id = ris.id, birthDate = birthdate, credit=0.)
@@ -149,7 +142,7 @@ def register():
 #luca
 @app.route("/accountInfo")
 def account_info() :
-    conn = engine.connect()
+    conn = choiceEngine()
     join = users.join(clients, users.c.id == clients.c.id)
     query = select([users,clients]).select_from(join).where(users.c.id == current_user.get_id())
     
@@ -175,6 +168,7 @@ def loginClient():
         email = request.form.get("email")
         password = request.form.get("password")
         user = findUser(clients, email, password, [users])  
+        
         if user:
             login_user(User(user.id, Role.CLIENT))
             flash('Loggato correttamente', 'info')
@@ -221,7 +215,7 @@ def loginManager():
 def change1():
     if request.method == 'POST':
         money = request.form.get("import")
-        conn = engine.connect()
+        conn = choiceEngine()
         base = select([clients]).where(clients.c.id == current_user.get_id())
         ris = conn.execute(base).fetchone()
         if float(money) < 0 :
@@ -251,7 +245,7 @@ def statistiche():
             s = booking.join(movieSchedule, booking.c.idmovieSchedule == movieSchedule.c.id).join(movies, movieSchedule.c.idMovie == movies.c.id)
             query = select([func.count(booking.c.id)]).select_from(s).where(movies.c.idGenre == genere)
             
-            conn = engine.connect()
+            conn = choiceEngine()
             ris1 = conn.execute(query).fetchone()
             queryAvgAge = select([func.avg(booking.c.viewerAge)]).select_from(s).where(movies.c.idGenre == genere)
             
@@ -263,7 +257,7 @@ def statistiche():
 
         else:
             if sala!= 'Seleziona...' and film != 'Seleziona...'and genere =='Seleziona...':
-                conn = engine.connect()
+                conn = choiceEngine()
                 #numeri di posti prenotati per sala per film
                 s = booking.join(movieSchedule, booking.c.idmovieSchedule == movieSchedule.c.id)
                 queryPosti = select([func.count(booking.c.id)]).select_from(s).where(and_(movieSchedule.c.idMovie == film, movieSchedule.c.theater == sala))
@@ -271,7 +265,7 @@ def statistiche():
                 print(ris3) #risposta da mandare ad un html
                 conn.close()
                 
-                conn = engine.connect()
+                conn = choiceEngine()
                 #incasso per film
                 s = booking.join(movieSchedule, booking.c.idmovieSchedule == movieSchedule.c.id)
                 querynumeroPrenotazioni = select([func.sum(movieSchedule.c.price)]).select_from(s).where(movieSchedule.c.idMovie == film)
@@ -288,7 +282,7 @@ def statistiche():
     s41 = movieSchedule.join(movies, movieSchedule.c.idMovie== movies.c.id)
     #s4 = select([func.distinct(movies.c.id),movies.c.title]).select_from(s41).order_by(movies.c.title)#trovo solo i film con prenotazioni mi manca il count distinct 
     s4 = select([movies]).select_from(s41).order_by(movies.c.title)
-    conn = engine.connect()
+    conn = choiceEngine()
     generi = conn.execute(s2)
     sale = conn.execute(s3)
     film = conn.execute(s4)

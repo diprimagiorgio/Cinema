@@ -2,6 +2,7 @@ from sqlalchemy import  select, bindparam
 
 from app.model import clients, managers
 from app import app, engine
+from app.engineFunc import choiceEngine
 
 
 """
@@ -9,7 +10,7 @@ from app import app, engine
 """
 #Diprima Giorgio
 def pay(id, amount):
-    conn = engine.connect()
+    conn = choiceEngine()
     trans = conn.begin()
     try:
       

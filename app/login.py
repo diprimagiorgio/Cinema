@@ -1,8 +1,9 @@
 from flask_login import LoginManager, UserMixin, current_user
 from app import app, engine
 from enum import IntEnum
-from sqlalchemy import select, and_
+from sqlalchemy import select, and_, bindparam
 from app.model import users, clients, managers
+from app.engineFunc import choiceEngine
 from functools import wraps
 from flask import redirect, flash
 
@@ -35,11 +36,11 @@ class Role(IntEnum):
 #------------------------Shared function Login-----------------------#
 
 def findUser(table, email, password, sel):
-    conn = engine.connect()
+    conn = choiceEngine()
     query = select(sel).\
             select_from(users.join(table)).\
-            where(and_(users.c.email == email, users.c.password == password))
-    user = conn.execute(query).fetchone()            #ritorna none se non contiene nessuna riga
+            where(and_(users.c.email == bindparam('email'), users.c.password == bindparam('password')))
+    user = conn.execute(query, {'email' : email, 'password' : password}).fetchone()            #ritorna none se non contiene nessuna riga
     conn.close()
     return user
 #--------------------------------------------------------------#
@@ -50,7 +51,7 @@ def findUser(table, email, password, sel):
 #Giosuè Zannini
 @login_manager.user_loader
 def load_user(user_id):
-    conn = engine.connect()
+    conn = choiceEngine()
     query = select([clients]).\
             where(clients.c.id == user_id)
     result = conn.execute(query).fetchone()
