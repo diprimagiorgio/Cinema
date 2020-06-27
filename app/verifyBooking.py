@@ -1,7 +1,7 @@
 from flask import redirect, render_template, request, make_response, url_for, flash
 from flask_login import current_user
 from sqlalchemy import insert, select, join, bindparam, desc, func
-from app import app, engine
+from app import app
 from app.login import login_required, Role
 from app.model import movies, genres, movieSchedule, theaters, booking, users, clients
 from app.functionForBooking import createIntegerListFromQuery

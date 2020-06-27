@@ -1,6 +1,6 @@
 from sqlalchemy import insert
 from app.model import genres, movies, theaters, movieSchedule, booking
-from app import app, engine
+from app import app
 from datetime import date
 
 @app.route("/init")
@@ -47,11 +47,11 @@ def initializer():
         { 'title':'Lasciami entrare','minimumAge': 16,'duration': 114, 'idGenre': 13},
         { 'title':'The kid','duration': 112, 'idGenre': 17},
         { 'title':'Deadwood','duration': 110, 'idGenre':17},
-        { 'title':'50 sfumature di rosso','minimumAge': 14,'duration': 110, 'idGenre': 9}
-        { 'title':'Diego Maradona','duration': 130, 'idGenre': 6}
-        { 'title':'Free solo','duration': 140, 'idGenre': 6}
-        { 'title':'Terminator','minimumAge': 14,'duration': 128, 'idGenre': 10}
-        { 'title':'Man in black international','minimumAge': 14,'duration': 115, 'idGenre': 10}
+        { 'title':'50 sfumature di rosso','minimumAge': 14,'duration': 110, 'idGenre': 9},
+        { 'title':'Diego Maradona','duration': 130, 'idGenre': 6},
+        { 'title':'Free solo','duration': 140, 'idGenre': 6},
+        { 'title':'Terminator','minimumAge': 14,'duration': 128, 'idGenre': 10},
+        { 'title':'Man in black international','minimumAge': 14,'duration': 115, 'idGenre': 10},
         { 'title':'Love','minimumAge': 18,'duration': 110, 'idGenre': 9}
     ])
     
@@ -156,19 +156,19 @@ def initializer():
     ])
     
  #   conn.execute(booking.insert(),[
- #   { 'viewerName': 'A', 'viewerAge': '15', 'seatNumber': 1, 'clientUsername': 1 ,'idmovieShedule' : 1},
- #   { 'viewerName': 'B', 'viewerAge': '15', 'seatNumber': 2, 'clientUsername': 1 ,'idmovieShedule' : 1},
- #   { 'viewerName': 'C', 'viewerAge': '15', 'seatNumber': 3, 'clientUsername': 1 ,'idmovieShedule' : 1},
- #   { 'viewerName': 'D', 'viewerAge': '18', 'seatNumber': 4, 'clientUsername': 1 ,'idmovieShedule' : 1},
- #   { 'viewerName': 'E', 'viewerAge': '18', 'seatNumber': 5, 'clientUsername': 2 ,'idmovieShedule' : 1},
- #   { 'viewerName': 'F', 'viewerAge': '60', 'seatNumber': 6, 'clientUsername': 2 ,'idmovieShedule' : 1},
- #   { 'viewerName': 'G', 'viewerAge': '50', 'seatNumber': 7, 'clientUsername': 2 ,'idmovieShedule' : 1},
- #   { 'viewerName': 'H', 'viewerAge': '60', 'seatNumber': 8, 'clientUsername': 2 ,'idmovieShedule' : 2},
- #   { 'viewerName': 'I', 'viewerAge': '45', 'seatNumber': 9, 'clientUsername': 2 ,'idmovieShedule' : 2},
- #   { 'viewerName': 'L', 'viewerAge': '45', 'seatNumber': 10, 'clientUsername': 3 ,'idmovieShedule' : 2},
- #   { 'viewerName': 'M', 'viewerAge': '35', 'seatNumber': 11, 'clientUsername': 5 ,'idmovieShedule' : 2},
- #   { 'viewerName': 'N', 'viewerAge': '35', 'seatNumber': 12, 'clientUsername': 5 ,'idmovieShedule' : 3},
- #   { 'viewerName': 'O', 'viewerAge': '32', 'seatNumber': 13, 'clientUsername': 3 ,'idmovieShedule' : 3},
+ # #  { 'viewerName': 'A', 'viewerAge': '15', 'seatNumber': 1, 'clientUsername': 1 ,'idmovieShedule' : 1},
+ # #  { 'viewerName': 'B', 'viewerAge': '15', 'seatNumber': 2, 'clientUsername': 1 ,'idmovieShedule' : 1},
+ # #  { 'viewerName': 'C', 'viewerAge': '15', 'seatNumber': 3, 'clientUsername': 1 ,'idmovieShedule' : 1},
+ # #  { 'viewerName': 'D', 'viewerAge': '18', 'seatNumber': 4, 'clientUsername': 1 ,'idmovieShedule' : 1},
+ # #  { 'viewerName': 'E', 'viewerAge': '18', 'seatNumber': 5, 'clientUsername': 2 ,'idmovieShedule' : 1},
+ # #  { 'viewerName': 'F', 'viewerAge': '60', 'seatNumber': 6, 'clientUsername': 2 ,'idmovieShedule' : 1},
+ # #  { 'viewerName': 'G', 'viewerAge': '50', 'seatNumber': 7, 'clientUsername': 2 ,'idmovieShedule' : 1},
+ # #  { 'viewerName': 'H', 'viewerAge': '60', 'seatNumber': 8, 'clientUsername': 2 ,'idmovieShedule' : 2},
+ # #  { 'viewerName': 'I', 'viewerAge': '45', 'seatNumber': 9, 'clientUsername': 2 ,'idmovieShedule' : 2},
+ # #  { 'viewerName': 'L', 'viewerAge': '45', 'seatNumber': 10, 'clientUsername': 3 ,'idmovieShedule' : 2},
+ # #  { 'viewerName': 'M', 'viewerAge': '35', 'seatNumber': 11, 'clientUsername': 5 ,'idmovieShedule' : 2},
+ # #  { 'viewerName': 'N', 'viewerAge': '35', 'seatNumber': 12, 'clientUsername': 5 ,'idmovieShedule' : 3},
+ # #  { 'viewerName': 'O', 'viewerAge': '32', 'seatNumber': 13, 'clientUsername': 3 ,'idmovieShedule' : 3},
  #   { 'viewerName': 'P', 'viewerAge': '27', 'seatNumber': 14, 'clientUsername': 3 ,'idmovieShedule' : 3},
  #   { 'viewerName': 'Q', 'viewerAge': '28', 'seatNumber': 15, 'clientUsername': 3 ,'idmovieShedule' : 3},
  #   { 'viewerName': 'R', 'viewerAge': '27', 'seatNumber': 16, 'clientUsername': 3 ,'idmovieShedule' : 3},

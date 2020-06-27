@@ -3,7 +3,7 @@ from sqlalchemy import insert, select, join, delete, and_
 from flask_login import LoginManager, UserMixin, current_user, login_user, logout_user
 from app.model import users, movies, genres, movieSchedule, theaters, clients, managers, booking
 from datetime import date, timedelta , datetime
-from app import app, engine
+from app import app
 from app.login import User, Role, login_required, login_manager, findUser
 from app.engineFunc import choiceEngine
 from sqlalchemy.sql.functions import now

@@ -1,5 +1,5 @@
 from flask import make_response, render_template
-#from app import app, engine   PENSO NON SERVA
+#from app import app, engine   PENSO NON SERVE
 import time 
 from threading import Thread 
 
