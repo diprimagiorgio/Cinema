@@ -16,7 +16,7 @@ users = Table( 'users', metadata,
             Column('name', String),
             Column('surname', String),
             Column('email', String, unique = True, nullable = False),
-            Column('password', String, nullable = False)#PENSARE MINIMO LUNGHEZZE
+            Column('password', String, nullable = False)
         )
 
 clients = Table( 'clients', metadata,
@@ -67,7 +67,7 @@ movieSchedule = Table('movieSchedule', metadata,
                 )
 
 booking = Table('booking', metadata, 
-                Column('id', Integer, primary_key = True),
+                Column('id', Integer, primary_key = True, autoincrement=True),
                 Column('viewerName', String, nullable = False),
                 Column('viewerAge', Integer, nullable = False),
                 Column('seatNumber', Integer, nullable = False),

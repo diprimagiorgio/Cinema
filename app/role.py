@@ -1,6 +1,6 @@
 from sqlalchemy import insert, select
 from app.model import users, managers
-from app import app, engine
+from app import app, engineAdmin
 from app.initializer import initializer
 from flask import redirect, flash
 
@@ -17,7 +17,7 @@ def init():
 def initAdmin():
     ins = users.insert().values(name="Admin", surname ="Admin", email ="admin@admin.com", password = "secret")    
     
-    conn = engine.connect()
+    conn = engineAdmin.connect()
     conn.execute(ins)
 
     query = select([users]).where(users.c.email == "admin@admin.com")#mi serve per ritrovarmi l'ID corretto
@@ -29,7 +29,7 @@ def initAdmin():
 
 def initRole():
      #-------------------------------ROLE E USER userNotLogged-----------------------------------------#
-    conn = engine.connect()
+    conn = engineAdmin.connect()
     conn.execute("""
             CREATE ROLE "role_userNotLogged";
             CREATE USER "userNotLogged" WITH PASSWORD 'secret';
