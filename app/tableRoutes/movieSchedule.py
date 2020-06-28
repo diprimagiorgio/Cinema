@@ -1,4 +1,4 @@
-from app import app, engine
+from app import app
 from sqlalchemy import insert, select, join, delete, outerjoin, bindparam, and_, text
 from flask import  request, flash, make_response, render_template
 from app.model import movies, movieSchedule, genres, theaters
@@ -6,6 +6,7 @@ from .shared import queryAndTemplate, queryAndFun
 from .theater import selectTheaters
 from datetime import datetime, timedelta
 from app.login import Role, login_required
+from app.engineFunc import choiceEngine
 
 
 #---------------------------------SELECT---------------------------------#
@@ -57,7 +58,7 @@ def insertShowTime():
 
             #Trovo la durata del film che voglio andare a mettere in proiezione
             sel = select([movies]).where(movies.c.id == bindparam('id_movie'))
-            conn = engine.connect()
+            conn = choiceEngine()
             result = conn.execute(sel,{ 'id_movie' : movie}).fetchone()
             conn.close()
             
@@ -78,7 +79,7 @@ def insertShowTime():
                             movieSchedule.c.dateTime  <= end, 
                             )
                     )
-            conn = engine.connect()
+            conn = choiceEngine()
             result = conn.execute(sel,{ 'theater' : theater,'date': date}).fetchone()
             conn.close()
 
@@ -95,7 +96,7 @@ def insertShowTime():
         #devo inserire nel database
     s1 = selectTheaters#trovo tutte le sale
     s2 = select([movies])#trovo tutti i film
-    conn = engine.connect()
+    conn = choiceEngine()
     mv = conn.execute(s2)
     th = conn.execute(s1)
     resp = make_response(render_template("/tables/movieSchedule/insertShowTime.html", theaters = th, movies = mv))

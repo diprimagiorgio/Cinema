@@ -3,8 +3,9 @@ from sqlalchemy import insert, select, join, delete, and_
 from flask_login import LoginManager, UserMixin, current_user, login_user, logout_user
 from app.model import users, movies, genres, movieSchedule, theaters, clients, managers, booking
 from datetime import date, timedelta , datetime
-from app import app, engine
+from app import app
 from app.login import User, Role, login_required, login_manager, findUser
+from app.engineFunc import choiceEngine
 from sqlalchemy.sql.functions import now
 
 
@@ -32,7 +33,7 @@ def dataBase():
 def financialReport():
     sel = select([managers]).\
             where( managers.c.admin == True)
-    conn = engine.connect()
+    conn = choiceEngine()
     res = conn.execute(sel).fetchone()
     conn.close()
     return render_template("/manager/admin/financialReport.html", result = res)
@@ -58,18 +59,22 @@ def registerManager():
         if not name or not email or not password or not surname :
             flash("Devi inserire tutti i dati")
             return redirect ("/registerManager")
-        conn = engine.connect()
+        conn = choiceEngine()
         u = select([users]).where(users.c.email == email)#mi serve per contrallare che la mail inserita non sia gia stata utilizzata
         y = conn.execute(u).fetchone()
         conn.close()
         if y is not None:
             flash('Email gia usata, riprova con un altra!', 'error') 
             return redirect('/registerManager')
-        conn = engine.connect()
+
+
+
+        conn = choiceEngine()
         ins = users.insert(None).values(name=name, surname = surname, email = email, password = password)    
         conn.execute(ins)
         conn.close()
-        conn = engine.connect()
+
+        conn = choiceEngine()
         query = select([users]).where(users.c.email == email)#mi serve per ritrovarmi l'ID corretto
         ris = conn.execute(query).fetchone()
         insmanager= managers.insert(None).values(id = ris.id,admin = False , financialReport=None)
@@ -115,10 +120,54 @@ def register():
         return redirect("/")
     return render_template("/user/noLogged/register.html") 
 
-#Luca Bizzotto
+
+
+#luca
+@app.route('/register', methods =['POST'] )
+def register():
+    name = request.form.get("name")
+    surname = request.form.get("surname")
+    email = request.form.get("email")
+    password = request.form.get("password")
+    birthdate = request.form.get("birthdate")
+    if not name or not email or not password or not birthdate or not surname :
+        flash("Devi inserire tutti i dati")
+        return redirect ("/signIn")
+    
+    min =date.today() - timedelta(days = 4745)
+    if datetime.strptime(birthdate,"%Y-%m-%d").date()> min:
+        flash("Inserisci una data di compleanno valida","error")
+        return redirect ("/signIn")
+    
+    #conn = engine.connect()
+    conn = choiceEngine()#-------------------------------------------------------
+    u = select([users]).where(users.c.email == email)#mi serve per contrallare che la mail inserita non sia gia stata utilizzata
+    y = conn.execute(u).fetchone()
+    conn.close()
+    
+    if y is not None:
+        flash('Email gia usata, riprova con un altra!', 'error') 
+        return redirect('/signIn')
+    
+    
+    
+    conn = choiceEngine()
+    ins = users.insert(None).values(name=name, surname = surname, email = email, password = password)    
+    conn.execute(ins)
+    conn.close()
+    
+    conn = choiceEngine()
+    query = select([users]).where(users.c.email == email)
+    ris = conn.execute(query).fetchone()
+    insclients= clients.insert(None).values(id = ris.id, birthDate = birthdate, credit=0.)
+    conn.execute(insclients)
+    conn.close()
+    
+    return redirect("/")
+#luca
 @app.route("/accountInfo")
 def account_info() :
-    conn = engine.connect()
+    conn = choiceEngine()
     join = users.join(clients, users.c.id == clients.c.id)
     query = select([users,clients]).select_from(join).where(users.c.id == current_user.get_id())
     u = conn.execute(query)          #ritorna none se non contiene nessuna riga
@@ -137,6 +186,7 @@ def loginClient():
         email = request.form.get("email")
         password = request.form.get("password")
         user = findUser(clients, email, password, [users])  
+        
         if user:
             login_user(User(user.id, Role.CLIENT))
             flash('Loggato correttamente', 'info')
@@ -183,7 +233,7 @@ def loginManager():
 def change1():
     if request.method == 'POST':
         money = request.form.get("import")
-        conn = engine.connect()
+        conn = choiceEngine()
         base = select([clients]).where(clients.c.id == current_user.get_id())
         ris = conn.execute(base).fetchone()
         if float(money) < 0 :
@@ -200,3 +250,60 @@ def change1():
 
 
 
+#-----------------------------------------------------------#
+app.route("/statistiche",  methods=['GET','POST'])
+def statistiche():
+    
+    if request.method == 'POST':        
+        genere= request.form.get('genere')
+        sala= request.form.get('sale')
+        film= request.form.get('film')
+        if genere != 'Seleziona...':
+            
+            s = booking.join(movieSchedule, booking.c.idmovieSchedule == movieSchedule.c.id).join(movies, movieSchedule.c.idMovie == movies.c.id)
+            query = select([func.count(booking.c.id)]).select_from(s).where(movies.c.idGenre == genere)
+            
+            conn = engine.connect()
+            ris1 = conn.execute(query).fetchone()
+            queryAvgAge = select([func.avg(booking.c.viewerAge)]).select_from(s).where(movies.c.idGenre == genere)
+            
+            ris2 = conn.execute(queryAvgAge).fetchone()
+            
+            conn.close()
+            
+            return render_template("resultStatistiche.html",answer = ris1, genre = genere, age = ris2 )
+
+        else:
+            if sala!= 'Seleziona...' and film != 'Seleziona...'and genere =='Seleziona...':
+                conn = choiceEngine()
+                #numeri di posti prenotati per sala per film
+                s = booking.join(movieSchedule, booking.c.idmovieSchedule == movieSchedule.c.id)
+                queryPosti = select([func.count(booking.c.id)]).select_from(s).where(and_(movieSchedule.c.idMovie == film, movieSchedule.c.theater == sala))
+                ris3 = conn.execute(queryPosti).fetchone()
+                print(ris3) #risposta da mandare ad un html
+                conn.close()
+                
+                conn = choiceEngine()
+                #incasso per film
+                s = booking.join(movieSchedule, booking.c.idmovieSchedule == movieSchedule.c.id)
+                querynumeroPrenotazioni = select([func.sum(movieSchedule.c.price)]).select_from(s).where(movieSchedule.c.idMovie == film)
+            
+                ris4 = conn.execute(querynumeroPrenotazioni).fetchone()
+                print(ris4)
+                conn.close()
+                
+                
+                
+            flash('Dati mancanti', 'error')
+    s2 = select([genres])#trovo tutti i generi
+    s3 = select([theaters])#trovo tutte le sale
+    s41 = movieSchedule.join(movies, movieSchedule.c.idMovie== movies.c.id)
+    #s4 = select([func.distinct(movies.c.id),movies.c.title]).select_from(s41).order_by(movies.c.title)#trovo solo i film con prenotazioni mi manca il count distinct 
+    s4 = select([movies]).select_from(s41).order_by(movies.c.title)
+    conn = choiceEngine()
+    generi = conn.execute(s2)
+    sale = conn.execute(s3)
+    film = conn.execute(s4)
+    resp = make_response(render_template("statistiche.html", genres = generi, theaters = sale, movies = film ))
+    conn.close()
+    return resp

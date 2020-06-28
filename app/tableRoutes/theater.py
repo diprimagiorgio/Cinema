@@ -1,4 +1,4 @@
-from app import app, engine
+from app import app
 from sqlalchemy import insert, select, delete, and_, bindparam
 from flask import  request, flash, make_response, render_template, redirect, url_for
 from app.model import theaters, movieSchedule
@@ -7,12 +7,13 @@ from datetime import datetime
 import time
 from sqlalchemy.orm import Session
 from app.login import Role, login_required
+from app.engineFunc import choiceEngine
 
 
 #---------------------------------SELECT---------------------------------#
 def selectTheaters():
     s = select([theaters]).where(theaters.c.available == True)
-    conn = engine.connect()
+    conn = choiceEngine()
     result = conn.execute(s)
     conn.close()
     return result
@@ -34,7 +35,7 @@ def insertTheater():
         id = request.form.get('id')
         if capacity and id :#verifico che mi abbiano passato i parametri e che non siano già registrate sale con lo stesso id
            
-            conn = engine.connect()
+            conn = choiceEngine()
             #lo faccio dentro un try perchè se ci sono già sale con la stessa PK va in errore
             try:
                 ins  = theaters.insert().\
@@ -123,7 +124,7 @@ def selectTheaterToUpdate():
                 )
                 #TODO forse si potrebbe mettere in shared
           
-            conn = engine.connect()
+            conn = choiceEngine()
             result = conn.execute(sel, {'id' : id}).fetchone()
             conn.close()
       

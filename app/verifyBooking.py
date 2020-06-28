@@ -1,10 +1,13 @@
 from flask import redirect, render_template, request, make_response, url_for, flash
 from flask_login import current_user
 from sqlalchemy import insert, select, join, bindparam, desc, func
-from app import app, engine
+from app import app
 from app.login import login_required, Role
 from app.model import movies, genres, movieSchedule, theaters, booking, users, clients
 from app.functionForBooking import createIntegerListFromQuery
+from app.engineFunc import choiceEngine
+import datetime
+
 
 
 
@@ -25,8 +28,9 @@ def verifymovie():
             join(genres, movies.c.idGenre == genres.c.id).join(theaters, theaters.c.id == movieSchedule.c.theater).\
             join(booking, booking.c.idmovieSchedule == movieSchedule.c.id, isouter = True)).\
             order_by(desc(movieSchedule.c.dateTime)).\
-            group_by(movieSchedule.c.id, movieSchedule.c.dateTime, movies.c.title, genres.c.description, movies.c.duration, movies.c.minimumAge, movieSchedule.c.theater, movieSchedule.c.price, theaters.c.seatsCapacity)
-    conn = engine.connect()
+            group_by(movieSchedule.c.id, movieSchedule.c.dateTime, movies.c.title, genres.c.description, movies.c.duration, movies.c.minimumAge, movieSchedule.c.theater, movieSchedule.c.price, theaters.c.seatsCapacity).\
+            where(movieSchedule.c.dateTime > datetime.datetime.now())
+    conn = choiceEngine()
     result = conn.execute(query)
     resp = make_response(render_template("/manager/shared/verifyMovie.html", result = result))
     conn.close()
@@ -39,7 +43,7 @@ def verifymovie():
 @app.route('/verifyBook/<int:idmovieSchedule>')
 @login_required(Role.SUPERVISOR)
 def verifyBook(idmovieSchedule):
-    conn = engine.connect()
+    conn = choiceEngine()
     queryTheater = select([theaters.c.id, theaters.c.seatsCapacity]).\
                    select_from(theaters.join(movieSchedule, theaters.c.id == movieSchedule.c.theater)).\
                    where(movieSchedule.c.id == bindparam('idmovieSchedule'))

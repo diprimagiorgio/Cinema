@@ -1,10 +1,11 @@
-from app import app, engine
+from app import app
 from sqlalchemy import insert, select, outerjoin, delete, bindparam, and_
 from flask import  request, flash, redirect, url_for, render_template
 from app.model import movies, genres, movieSchedule
 from .shared import queryAndTemplate, queryAndFun, queryHasResult
 from datetime import datetime
 from app.login import Role, login_required
+from app.engineFunc import choiceEngine
 
 #---------------------------------SELECT---------------------------------#
 selectMovies = s = select([movies.\
@@ -96,7 +97,7 @@ def selectMovieToUpdate():
         if id:
             sel = select([movies]).\
                 where(movies.c.id == bindparam('id'))
-            conn = engine.connect()
+            conn = choiceEngine()
             r1 = conn.execute(sel, {'id' : id}).fetchone()
             sel = select([genres])
             r2 = conn.execute(sel)
