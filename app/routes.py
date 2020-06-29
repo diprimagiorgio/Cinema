@@ -81,7 +81,7 @@ def registerManager():
         conn.execute(insmanager)
         conn.close()
         return redirect("/")
-    return render_template("/user/noLogged/registerManager.html")
+    return render_template("/manager/admin/registerManager.html")
 
 #Luca Bizzotto
 @app.route('/register', methods =['GET','POST'] )
@@ -94,23 +94,23 @@ def register():
         birthdate = request.form.get("birthdate")
         if not name or not email or not password or not birthdate or not surname :
             flash("Devi inserire tutti i dati")
-            return redirect ("/signIn")
+            return redirect ("/register")
         min =date.today() - timedelta(days = 4745)
         if datetime.strptime(birthdate,"%Y-%m-%d").date()> min:
             flash("Inserisci una data di compleanno valida","error")
             return redirect ("/register")
-        conn = engine.connect()
+        conn = choiceEngine()
         u = select([users]).where(users.c.email == email)#mi serve per contrallare che la mail inserita non sia gia stata utilizzata
         y = conn.execute(u).fetchone()
         conn.close()
         if y is not None:
             flash('Email gia usata, riprova con un altra!', 'error') 
-            return redirect('/signIn')
-        conn = engine.connect()
+            return redirect('/register')
+        conn = choiceEngine()
         ins = users.insert(None).values(name=name, surname = surname, email = email, password = password)    
         conn.execute(ins)
         conn.close()
-        conn = engine.connect()
+        conn = choiceEngine()
         query = select([users]).where(users.c.email == email)
         ris = conn.execute(query).fetchone()
         insclients= clients.insert(None).values(id = ris.id, birthDate = birthdate, credit=0.)
@@ -122,48 +122,7 @@ def register():
 
 
 
-#luca
-@app.route('/register', methods =['POST'] )
-def register():
-    name = request.form.get("name")
-    surname = request.form.get("surname")
-    email = request.form.get("email")
-    password = request.form.get("password")
-    birthdate = request.form.get("birthdate")
-    if not name or not email or not password or not birthdate or not surname :
-        flash("Devi inserire tutti i dati")
-        return redirect ("/signIn")
-    
-    min =date.today() - timedelta(days = 4745)
-    if datetime.strptime(birthdate,"%Y-%m-%d").date()> min:
-        flash("Inserisci una data di compleanno valida","error")
-        return redirect ("/signIn")
-    
-    #conn = engine.connect()
-    conn = choiceEngine()#-------------------------------------------------------
-    u = select([users]).where(users.c.email == email)#mi serve per contrallare che la mail inserita non sia gia stata utilizzata
-    y = conn.execute(u).fetchone()
-    conn.close()
-    
-    if y is not None:
-        flash('Email gia usata, riprova con un altra!', 'error') 
-        return redirect('/signIn')
-    
-    
-    
-    conn = choiceEngine()
-    ins = users.insert(None).values(name=name, surname = surname, email = email, password = password)    
-    conn.execute(ins)
-    conn.close()
-    
-    conn = choiceEngine()
-    query = select([users]).where(users.c.email == email)
-    ris = conn.execute(query).fetchone()
-    insclients= clients.insert(None).values(id = ris.id, birthDate = birthdate, credit=0.)
-    conn.execute(insclients)
-    conn.close()
-    
-    return redirect("/")
+
 #luca
 @app.route("/accountInfo")
 def account_info() :
@@ -263,7 +222,7 @@ def statistiche():
             s = booking.join(movieSchedule, booking.c.idmovieSchedule == movieSchedule.c.id).join(movies, movieSchedule.c.idMovie == movies.c.id)
             query = select([func.count(booking.c.id)]).select_from(s).where(movies.c.idGenre == genere)
             
-            conn = engine.connect()
+            conn = choiceEngine()
             ris1 = conn.execute(query).fetchone()
             queryAvgAge = select([func.avg(booking.c.viewerAge)]).select_from(s).where(movies.c.idGenre == genere)
             

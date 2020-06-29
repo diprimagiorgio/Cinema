@@ -1,5 +1,3 @@
-from sqlalchemy import insert, select
-from app.model import users, managers
 from app import app, engineAdmin
 from app.initializer import initializer
 from flask import redirect, flash
@@ -7,25 +5,13 @@ from flask import redirect, flash
 @app.route("/init")
 def init():
     initRole()
-    initAdmin()
     initializer()
     flash("Database inizializzato correttamente", "info")
     return redirect('/')
 
 
 
-def initAdmin():
-    ins = users.insert().values(name="Admin", surname ="Admin", email ="admin@admin.com", password = "secret")    
-    
-    conn = engineAdmin.connect()
-    conn.execute(ins)
 
-    query = select([users]).where(users.c.email == "admin@admin.com")#mi serve per ritrovarmi l'ID corretto
-    ris = conn.execute(query).fetchone()
-
-    ins = managers.insert().values(id = ris.id , admin = True , financialReport=0)
-    conn.execute(ins)
-    conn.close()
 
 def initRole():
      #-------------------------------ROLE E USER userNotLogged-----------------------------------------#

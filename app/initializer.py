@@ -1,18 +1,76 @@
 from sqlalchemy import insert, select, func
-from app.model import genres, movies, theaters, movieSchedule, booking
+from app.model import genres, movies, theaters, movieSchedule, booking, clients, users, managers
 from app import app, engineAdmin
 from datetime import date
 from app.functionForBooking import createIntegerListFromQuery, convertToInt
+from random import randint
 
 
-@app.route("/prova")
-def initMovieSchedule():
-    N_PROIEZIONI = 1 #numero di proiezioni che voglio inserire
+
+def initUser():
+    UTENTI_INSERITI= 15
+    CREDITI = [20, 30, 40, 55, 60, 75]
+    NOMI = ["Luca", "Giovanni", "Mario", "Lucia", "Anna", "Assunta", "Giorgio", "Davide", "Michele", "Dario", "Valentina", "Sofia", "Daniela", "Gaia"]
+    COGNOMI = ["Rossi", "Sartori", "Bedin", "Rigon", "Casarotto", "Pavan", "Zanatta", "Scarpa", "Costantini", "Carraro"]
+    MAX_ANNO = 2000
+    nome = cognome = credito = 0
+    anno = MAX_ANNO - UTENTI_INSERITI
+    for i in range(UTENTI_INSERITI):
+        conn = engineAdmin.connect()
+        email = NOMI[nome % len(NOMI)] + str(i) + "@gmail.it"
+        insuser = users.insert().values(name = NOMI[nome % len(NOMI)], surname = COGNOMI[cognome % len(COGNOMI)], 
+                                    email = email, password = 1)  
+        conn.execute(insuser)
+        query = select([users.c.id]).where(users.c.email == email)
+        ris = convertToInt(str(conn.execute(query).fetchone()))
+        insclients= clients.insert().values(id = ris, birthDate = str(anno) + "-03-12", credit= CREDITI[credito % len(CREDITI)])  
+        conn.execute(insclients)
+        conn.close()
+        nome = nome + 1
+        cognome = cognome + 1
+        credito = credito + 1
+        anno = anno + 1
+
+        
+def initManager():
+    MANAGER_INSERITI= 5
+    NOMI = ["Luca", "Giovanni", "Mario", "Lucia", "Anna", "Assunta", "Giorgio", "Davide", "Michele", "Dario", "Valentina", "Sofia", "Daniela", "Gaia"]
+    COGNOMI = ["Rossi", "Sartori", "Bedin", "Rigon", "Casarotto", "Pavan", "Zanatta", "Scarpa", "Costantini", "Carraro"]
+    nome = cognome = 0
+    for i in range(MANAGER_INSERITI):
+        conn = engineAdmin.connect()
+        email = COGNOMI[cognome % len(COGNOMI)] + str(i) + "@ilMolo.it"
+        insuser = users.insert().values(name = NOMI[nome % len(NOMI)], surname = COGNOMI[cognome % len(COGNOMI)], 
+                                    email = email, password = 1)  
+        conn.execute(insuser)
+        query = select([users.c.id]).where(users.c.email == email)
+        ris = convertToInt(str(conn.execute(query).fetchone()))
+        insmanagers= managers.insert().values(id = ris, admin = False, financialReport=None)  
+        conn.execute(insmanagers)
+        conn.close()
+        nome = nome + 1
+        cognome = cognome + 1
+
+def initAdmin():
+    ins = users.insert().values(name="Admin", surname ="Admin", email ="admin@admin.com", password = "secret")    
+    
+    conn = engineAdmin.connect()
+    conn.execute(ins)
+
+    query = select([users]).where(users.c.email == "admin@admin.com")#mi serve per ritrovarmi l'ID corretto
+    ris = conn.execute(query).fetchone()
+
+    ins = managers.insert().values(id = ris.id , admin = True , financialReport=0)
+    conn.execute(ins)
+    conn.close()
+
+
+def initSchedule():
     PREZZO = 5 #prezzo biglietto
-    MESE = 12 #mesi di proiezioni
+    MESE = ["6", "7"] #mesi di proiezioni
     GIORNO = 28 #giorni di proiezioni
-    ANNO = ["2015","2016","2017","2018","2019","2020"] #anni di proiezioni
-    ORA = ["09:00:00", "11:30:00", "14:00:00", "16:30:00", "19:00:00", "21:30:00"] #ore di proiezioni
+    ANNO = ["2020"] #anni di proiezioni
+    ORA = ["11:30:00", "14:00:00", "16:30:00", "19:00:00"] #ore di proiezioni
     conn = engineAdmin.connect() 
     movie = select([func.count(movies.c.id)]).\
               select_from(movies)
@@ -20,51 +78,72 @@ def initMovieSchedule():
     theater = select([theaters.c.id]).\
               select_from(theaters)
     N_SALA = createIntegerListFromQuery(conn.execute(theater).fetchall())#lista con tutte le sale              
-    conn.close()
-                
-    film = 1
-    proiezioni = 1
-
+    conn.close()         
+    film = 0
     conn = engineAdmin.connect() 
     for anno in ANNO:
-        for mese in range(MESE):
+        for mese in MESE:
             for giorno in range(GIORNO):
                 for ora in ORA:
                     for sala in N_SALA:
                         ins = movieSchedule.insert().\
-                        values(dateTime = anno + "-" + str(mese+1) + "-" + str(giorno+1) + " " + ora, price = PREZZO, idMovie = film % N_FILM, theater = sala)
+                        values(dateTime = anno + "-" + mese + "-" + str(giorno+1) + " " + ora, price = PREZZO, idMovie = (film % N_FILM) + 1, theater = sala)
                         conn.execute(ins)
-                        film = film + 1
-                        if (proiezioni == N_PROIEZIONI):
-                            conn.close()
-                            return "Finito"
-                        proiezioni = proiezioni + 1                  
-    return "OK"
+                        film = film + 1              
+    conn.close()
                 
                 
                 
-                
-@app.route("/prova2")
 def initBooking():
-    N_PRENOTAZIONI = 1
+    PREZZO = 5
     NOMI = ["Luca", "Giovanni", "Mario", "Lucia", "Anna", "Assunta", "Giorgio", "Davide", "Michele", "Dario", "Valentina", "Sofia", "Daniela", "Gaia"]
-    ETA_MIN = 20
-    ETA_MAX = 60
-
-
-booking.insert().\
-        values(viewerName = bindparam('viewer'), viewerAge = bindparam('viewerAge'), seatNumber = bindparam('seatNumber'), 
-               clientUsername = current_user.get_id(), idmovieSchedule = bindparam('idmovieSchedule'))
-
-
-
-
-
-
-
-
-@app.route("/__init")
-def initializer():
+    ETA_MIN = 18
+    ETA_MAX = 85
+    RIEMPIMENTO_SALA=[-40, -30, -7]
+    conn = engineAdmin.connect() 
+    query = select([func.count(movieSchedule.c.id)]).\
+              select_from(movieSchedule)
+    N_SCHEDULE = convertToInt(str(conn.execute(query).fetchone()))#numero di programmazioni totali
+    query = select([clients.c.id]).\
+              select_from(clients.join(users, clients.c.id == users.c.id))
+    UTENTI = createIntegerListFromQuery(conn.execute(query).fetchall())#lista con tutti i clienti
+    conn.close()
+    riempi = -1
+    nome = 0
+    utente = 0
+    soldi = 0
+    for schedule in range(N_SCHEDULE):
+        riempi = riempi + 1
+        conn = engineAdmin.connect()
+        query = select([theaters.c.seatsCapacity]).\
+                     select_from(theaters.join(movieSchedule, movieSchedule.c.theater == theaters.c.id)).\
+                     where(movieSchedule.c.id == (schedule))
+        totalSeats = convertToInt(str(conn.execute(query).fetchone()))#numero di posti nella sala
+        conn.close()
+        conn = engineAdmin.connect() 
+        for seat in range(totalSeats + RIEMPIMENTO_SALA[riempi % len(RIEMPIMENTO_SALA)]):
+            ins = (booking.insert().\
+                    values(viewerName = NOMI[nome % len(NOMI)], viewerAge = randint(ETA_MIN, ETA_MAX), seatNumber = seat + 1, 
+                    clientUsername = UTENTI[utente % len(UTENTI)], idmovieSchedule = schedule + 1))
+            conn.execute(ins)
+            nome = nome + 1
+            utente = utente + 1
+            soldi = soldi + PREZZO
+        conn.close()
+    conn = engineAdmin.connect()
+     #selezione dell'id del manager
+    s_mn = select([managers]).\
+            where(managers.c.admin == True)
+    result = conn.execute(s_mn).fetchone()
+    #incremento il bilancio dell'amministratore
+    u_mn = managers.update().\
+            where(managers.c.id == result['id']).\
+            values( financialReport = result['financialReport'] + float(soldi))
+    conn.execute(u_mn)
+    conn.close()   
+            
+        
+def initGenre():
     conn = engineAdmin.connect()
     conn.execute(genres.insert(),[
         {'description': 'Animazione'},
@@ -85,7 +164,11 @@ def initializer():
         { 'description': 'Thriller'},
         { 'description': 'Western'}
     ])
+    conn.close()
     
+    
+def initMovie():
+    conn = engineAdmin.connect()
     conn.execute(movies.insert(),[
         { 'title':'Tolo Tolo','minimumAge': 0,'duration': 90, 'idGenre': 5},
         { 'title':'L\'immortale','minimumAge': 13,'duration': 116, 'idGenre': 7},
@@ -112,43 +195,30 @@ def initializer():
         { 'title':'Man in black international','minimumAge': 14,'duration': 115, 'idGenre': 10},
         { 'title':'Love','minimumAge': 18,'duration': 110, 'idGenre': 9}
     ])
-    
-    
-    
-    conn.execute(theaters.insert(),[
-    {'seatsCapacity': 100},
-    {'seatsCapacity': 100},
-    {'seatsCapacity': 60},
-    {'seatsCapacity': 80},
-    {'seatsCapacity': 40},
-    {'seatsCapacity': 40},
-    ])
-    
-    
- #   conn.execute(booking.insert(),[
- # #  { 'viewerName': 'A', 'viewerAge': '15', 'seatNumber': 1, 'clientUsername': 1 ,'idmovieShedule' : 1},
- # #  { 'viewerName': 'B', 'viewerAge': '15', 'seatNumber': 2, 'clientUsername': 1 ,'idmovieShedule' : 1},
- # #  { 'viewerName': 'C', 'viewerAge': '15', 'seatNumber': 3, 'clientUsername': 1 ,'idmovieShedule' : 1},
- # #  { 'viewerName': 'D', 'viewerAge': '18', 'seatNumber': 4, 'clientUsername': 1 ,'idmovieShedule' : 1},
- # #  { 'viewerName': 'E', 'viewerAge': '18', 'seatNumber': 5, 'clientUsername': 2 ,'idmovieShedule' : 1},
- # #  { 'viewerName': 'F', 'viewerAge': '60', 'seatNumber': 6, 'clientUsername': 2 ,'idmovieShedule' : 1},
- # #  { 'viewerName': 'G', 'viewerAge': '50', 'seatNumber': 7, 'clientUsername': 2 ,'idmovieShedule' : 1},
- # #  { 'viewerName': 'H', 'viewerAge': '60', 'seatNumber': 8, 'clientUsername': 2 ,'idmovieShedule' : 2},
- # #  { 'viewerName': 'I', 'viewerAge': '45', 'seatNumber': 9, 'clientUsername': 2 ,'idmovieShedule' : 2},
- # #  { 'viewerName': 'L', 'viewerAge': '45', 'seatNumber': 10, 'clientUsername': 3 ,'idmovieShedule' : 2},
- # #  { 'viewerName': 'M', 'viewerAge': '35', 'seatNumber': 11, 'clientUsername': 5 ,'idmovieShedule' : 2},
- # #  { 'viewerName': 'N', 'viewerAge': '35', 'seatNumber': 12, 'clientUsername': 5 ,'idmovieShedule' : 3},
- # #  { 'viewerName': 'O', 'viewerAge': '32', 'seatNumber': 13, 'clientUsername': 3 ,'idmovieShedule' : 3},
- #   { 'viewerName': 'P', 'viewerAge': '27', 'seatNumber': 14, 'clientUsername': 3 ,'idmovieShedule' : 3},
- #   { 'viewerName': 'Q', 'viewerAge': '28', 'seatNumber': 15, 'clientUsername': 3 ,'idmovieShedule' : 3},
- #   { 'viewerName': 'R', 'viewerAge': '27', 'seatNumber': 16, 'clientUsername': 3 ,'idmovieShedule' : 3},
- #   { 'viewerName': 'S', 'viewerAge': '27', 'seatNumber': 17, 'clientUsername': 6 ,'idmovieShedule' : 3},
- #   { 'viewerName': 'T', 'viewerAge': '12', 'seatNumber': 18, 'clientUsername': 6 ,'idmovieShedule' : 3},
- #   { 'viewerName': 'U', 'viewerAge': '12', 'seatNumber': 19, 'clientUsername': 7 ,'idmovieShedule' : 3},
- #   { 'viewerName': 'V', 'viewerAge': '12', 'seatNumber': 20, 'clientUsername': 2 ,'idmovieShedule' : 2},
- #   ])
-    
-    
     conn.close()
+  
+         
+def initTheater():
+    conn = engineAdmin.connect()
+    conn.execute(theaters.insert(),[
+        {'seatsCapacity': 80},
+        {'seatsCapacity': 60},
+        {'seatsCapacity': 80},
+        {'seatsCapacity': 40},
+        {'seatsCapacity': 40},
+    ])
+    conn.close()
+    
+
+
+def initializer():
+    initAdmin()
+    initManager()
+    initUser()
+    initGenre()
+    initTheater()
+    initMovie()
+    initSchedule()
+    initBooking()
     return "Done"
     
