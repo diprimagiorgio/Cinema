@@ -4,7 +4,7 @@ from flask import  request, flash, render_template, redirect, url_for
 from app.model import genres, movies
 from .shared import queryAndTemplate, queryAndFun, queryHasResult
 import time
-from app.login import Role, login_required
+from app.shared.login import Role, login_required
 from app.engineFunc import choiceEngine
 #---------------------------------SELECT---------------------------------#
 #DIPRIMA GIORGIO 

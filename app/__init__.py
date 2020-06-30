@@ -31,12 +31,14 @@ engineManager = create_engine(
 metadata = MetaData ()
 
 from app import model
-from app import login
+from app.shared import login
 from app import routes
 from app import statistiche
 from app import role
 
 from app.tableRoutes import movie, movieSchedule, theater, genre
-from app import initializer, pay, routesBooking, verifyBooking
+from app import initializer, pay
+from app.manager import verifyBooking
+from app.user import routesBooking
 #bisogna fare anche per genre
 

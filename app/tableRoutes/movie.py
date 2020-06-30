@@ -4,8 +4,9 @@ from flask import  request, flash, redirect, url_for, render_template
 from app.model import movies, genres, movieSchedule
 from .shared import queryAndTemplate, queryAndFun, queryHasResult
 from datetime import datetime
-from app.login import Role, login_required
+from app.shared.login import Role, login_required
 from app.engineFunc import choiceEngine
+
 #file di Diprima Giorgio
 #---------------------------------SELECT---------------------------------#
 #Seleziono tutti i film disponibili

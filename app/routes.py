@@ -4,7 +4,7 @@ from flask_login import LoginManager, UserMixin, current_user, login_user, logou
 from app.model import users, movies, genres, movieSchedule, theaters, clients, managers, booking
 from datetime import date, timedelta , datetime
 from app import app
-from app.login import User, Role, login_required, login_manager, findUser
+from app.shared.login import User, Role, login_required, login_manager, findUser
 from app.engineFunc import choiceEngine
 from sqlalchemy.sql.functions import now
 
@@ -41,10 +41,6 @@ def financialReport():
     
     
 
-        #è scritto sbagliato e sarebbe meglio fare tutto in una funzione
-@app.route('/signIn')
-def singIn():
-    return render_template("/user/noLogged/register.html")
 
 @app.route('/logout')
 @login_required()
@@ -52,12 +48,11 @@ def logout():
     logout_user()
     return redirect('/')
 
+#Luca Bizzotto
 @app.route('/registerManager',methods= ['GET','POST'])
 def registerManager():
     if request.method == 'POST': 
-        
         name = request.form.get("name")
-        print(name)
         surname = request.form.get("surname")
         email = request.form.get("email")
         password = request.form.get("password")
@@ -68,7 +63,6 @@ def registerManager():
         u = select([users]).where(users.c.email == email)#mi serve per contrallare che la mail inserita non sia gia stata utilizzata
         y = conn.execute(u).fetchone()
         conn.close()
-
         if y is not None:
             flash('Email gia usata, riprova con un altra!', 'error') 
             return redirect('/registerManager')
@@ -86,73 +80,56 @@ def registerManager():
         insmanager= managers.insert(None).values(id = ris.id,admin = False , financialReport=None)
         conn.execute(insmanager)
         conn.close()
+        return redirect("/")
+    return render_template("/manager/admin/registerManager.html")
+
+#Luca Bizzotto
+@app.route('/register', methods =['GET','POST'] )
+def register():
+    if request.method == 'POST':
+        name = request.form.get("name")
+        surname = request.form.get("surname")
+        email = request.form.get("email")
+        password = request.form.get("password")
+        birthdate = request.form.get("birthdate")
+        if not name or not email or not password or not birthdate or not surname :
+            flash("Devi inserire tutti i dati")
+            return redirect ("/register")
+        min =date.today() - timedelta(days = 4745)
+        if datetime.strptime(birthdate,"%Y-%m-%d").date()> min:
+            flash("Inserisci una data di compleanno valida","error")
+            return redirect ("/register")
+        conn = choiceEngine()
+        u = select([users]).where(users.c.email == email)#mi serve per contrallare che la mail inserita non sia gia stata utilizzata
+        y = conn.execute(u).fetchone()
+        conn.close()
+        if y is not None:
+            flash('Email gia usata, riprova con un altra!', 'error') 
+            return redirect('/register')
+        conn = choiceEngine()
+        ins = users.insert(None).values(name=name, surname = surname, email = email, password = password)    
+        conn.execute(ins)
+        conn.close()
+        conn = choiceEngine()
+        query = select([users]).where(users.c.email == email)
+        ris = conn.execute(query).fetchone()
+        insclients= clients.insert(None).values(id = ris.id, birthDate = birthdate, credit=0.)
+        conn.execute(insclients)
+        conn.close()
 
         return redirect("/")
-
-        
-
-    return render_template("/user/noLogged/registerManager.html")
+    return render_template("/user/noLogged/register.html") 
 
 
 
 
-
-#luca
-@app.route('/register', methods =['POST'] )
-def register():
-    name = request.form.get("name")
-    surname = request.form.get("surname")
-    email = request.form.get("email")
-    password = request.form.get("password")
-    birthdate = request.form.get("birthdate")
-    if not name or not email or not password or not birthdate or not surname :
-        flash("Devi inserire tutti i dati")
-        return redirect ("/signIn")
-    
-    min =date.today() - timedelta(days = 4745)
-    if datetime.strptime(birthdate,"%Y-%m-%d").date()> min:
-        flash("Inserisci una data di compleanno valida","error")
-        return redirect ("/signIn")
-    
-    #conn = engine.connect()
-    conn = choiceEngine()#-------------------------------------------------------
-    u = select([users]).where(users.c.email == email)#mi serve per contrallare che la mail inserita non sia gia stata utilizzata
-    y = conn.execute(u).fetchone()
-    conn.close()
-    
-    if y is not None:
-        flash('Email gia usata, riprova con un altra!', 'error') 
-        return redirect('/signIn')
-    
-    
-    
-    conn = choiceEngine()
-    ins = users.insert(None).values(name=name, surname = surname, email = email, password = password)    
-    conn.execute(ins)
-    conn.close()
-    
-    conn = choiceEngine()
-    query = select([users]).where(users.c.email == email)
-    ris = conn.execute(query).fetchone()
-    insclients= clients.insert(None).values(id = ris.id, birthDate = birthdate, credit=0.)
-    conn.execute(insclients)
-    conn.close()
-    
-    return redirect("/")
 #luca
 @app.route("/accountInfo")
 def account_info() :
     conn = choiceEngine()
     join = users.join(clients, users.c.id == clients.c.id)
     query = select([users,clients]).select_from(join).where(users.c.id == current_user.get_id())
-    
-    
-    
     u = conn.execute(query)          #ritorna none se non contiene nessuna riga
-    
-    
-    
-                                 
     resp = make_response(render_template("/user/logged/accountInfo.html", infoPersonali = u))
     conn.close()
     return resp
@@ -175,6 +152,7 @@ def loginClient():
             return redirect("/choiceMovie")
         flash('Email o password errate riprovare!', 'error')
     return render_template("/user/noLogged/loginClient.html")
+
 
 #Giosuè Zannini
 @app.route("/loginManager", methods=['POST', 'GET'])
@@ -199,18 +177,9 @@ def loginManager():
         flash('Email o password errate riprovare!', 'error')       
     return render_template("/manager/shared/loginManager.html")
 
-    #potrei fare che se admin vedo 
-    #               il bilancio
-    #               la possibilità di registrare menager
-    #               le tabelle 
-
-    #se manager vede le tabelle
 
 
-#luca
-
-    
-
+#Luca Bizzotto
 @app.route("/updateCredit",methods = ['GET','POST'])
 def change1():
     if request.method == 'POST':
@@ -219,10 +188,10 @@ def change1():
         base = select([clients]).where(clients.c.id == current_user.get_id())
         ris = conn.execute(base).fetchone()
         if float(money) < 0 :
-            flash("you can't insert neagtive value!",'error')
+            flash("Non puoi inserire valori negativi!",'error')
             return redirect("/updateCredit")
         query = clients.update().values(credit = float(money) + float(ris.credit)).where(clients.c.id == current_user.get_id())
-        flash("Recharge with success!",'info' )
+        flash("Ricarica avvenuta con successo!",'info' )
         conn.execute(query)
         conn.close()
         return redirect("/updateCredit")

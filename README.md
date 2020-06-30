@@ -44,7 +44,7 @@ postgres@user:~$ psql
 Crea un utente che sarà l'amministratore del database, e il proprietario. Assicurati di non avere già un utente con il nome admin_ilmolo
 
 ```console
-postgres=# CREATE USER admin_ilmolo WITH PASSWORD ‘secret’ CREATEDB CREATEROLE; 
+postgres=# CREATE USER admin_ilmolo WITH PASSWORD 'secret' CREATEDB CREATEROLE; 
 ```
 Apri un altro terminale. Quindi crea il database cinemaIlMolo
 

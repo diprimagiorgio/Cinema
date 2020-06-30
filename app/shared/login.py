@@ -37,6 +37,10 @@ class Role(IntEnum):
 
 def findUser(table, email, password, sel):
     conn = engineAdmin.connect()
+<<<<<<< HEAD:app/login.py
+=======
+    #ritorna un utente
+>>>>>>> master:app/shared/login.py
     query = select(sel).\
             select_from(users.join(table)).\
             where(and_(users.c.email == bindparam('email'), users.c.password == bindparam('password')))

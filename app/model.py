@@ -1,6 +1,10 @@
-from sqlalchemy import Table, Column, Integer, String, Float, Date, ForeignKey, CheckConstraint, DateTime, Boolean, column
+from sqlalchemy import Table, Column, Integer, String, Float, Date, ForeignKey, CheckConstraint, UniqueConstraint, DateTime, Boolean, column
 from app import metadata, engineAdmin
 import datetime
+
+
+
+from sqlalchemy import event, DDL
 
 
 
@@ -16,7 +20,7 @@ users = Table( 'users', metadata,
             Column('name', String),
             Column('surname', String),
             Column('email', String, unique = True, nullable = False),
-            Column('password', String, nullable = False)#PENSARE MINIMO LUNGHEZZE
+            Column('password', String, nullable = False)
         )
 
 clients = Table( 'clients', metadata,
@@ -29,8 +33,8 @@ clients = Table( 'clients', metadata,
 
 managers = Table('managers', metadata,
                 Column('id', None , ForeignKey('users.id'), primary_key = True),
-                Column('admin', Boolean, nullable = False),
-                Column('financialReport', Float),
+                Column('admin', Boolean, nullable = False, default = False),
+                Column('financialReport', Float, default = 0),
                 CheckConstraint(column('financialReport') >= 0, name='credit_mg_0')
             )
 
@@ -67,14 +71,33 @@ movieSchedule = Table('movieSchedule', metadata,
                 )
 
 booking = Table('booking', metadata, 
-                Column('id', Integer, primary_key = True),
+                Column('id', Integer, primary_key = True, autoincrement=True),
                 Column('viewerName', String, nullable = False),
                 Column('viewerAge', Integer, nullable = False),
                 Column('seatNumber', Integer, nullable = False),
                 Column('clientUsername',None, ForeignKey('clients.id'), nullable = False),
                 Column('idmovieSchedule', None, ForeignKey('movieSchedule.id'), nullable = False),
-                CheckConstraint(column('viewerAge') >= 0, name='age_bk_0')
+                CheckConstraint(column('viewerAge') >= 0, name='age_bk_0'),
+                UniqueConstraint('seatNumber', 'idmovieSchedule', name='uix_1')
             )
 
 metadata.create_all(engineAdmin)
 #----------fine tabella
+
+
+
+
+
+
+
+
+#trigger = DDL(
+#    "CREATE TRIGGER ins_Admin AFTER INSERT ON managers"
+#    "FOR EACH ROW "
+#    "WHEN (1 < (SELECT COUNT(NEW.admin) FROM managers WHERE admin == true))"
+#    "BEGIN SET NEW.admin=false; END"
+#)
+
+
+
+

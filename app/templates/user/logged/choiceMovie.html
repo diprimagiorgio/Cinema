@@ -30,7 +30,11 @@
                 <td>{{ movie['title'] }}</td>
                 <td>{{ movie['description'] }}</td>
                 <td>{{ movie['duration'] }}</td>
+                {% if movie['minimumAge'] == 0%}
+                  <td>Non richiesta</td>
+                {% else %}
                 <td>{{ movie['minimumAge'] }}</td>
+                {% endif %}
                 <td>{{ movie['theater'] }}</td>
                 <td>{{ movie['price'] }}</td> 
             </tr>
