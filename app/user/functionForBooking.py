@@ -10,7 +10,7 @@ timeOutBooking = {} #mi tiene traccia del time out per la prenotazione di ogni u
 
 
 #----------------------------Funzioni varie
-
+ #Giosuè Zannini
  #converte stringa in int
 def convertToInt(s):
     val = ''
@@ -20,14 +20,14 @@ def convertToInt(s):
     if val == '':
         val = '0'
     return int(val)     
-
+ #Giosuè Zannini
  #crea una lista da una query
 def createIntegerListFromQuery(iter):
     l = []
     for u in iter:
         l.append(convertToInt(str(u)))
     return l
-
+ #Giosuè Zannini
  #trasforma una stringa tupla in una lista di interi
 def createIntegerListFromString(string):
     l = []
@@ -40,7 +40,7 @@ def createIntegerListFromString(string):
             val = ''
     l.append(int(val))
     return l
-
+ #Giosuè Zannini
  #torna true nel caso in cui ci sia l'elemento dentro alla lista
 def searchInList(l, elem):
     check = False
@@ -52,17 +52,17 @@ def searchInList(l, elem):
 
 
 #----------------------------Funzioni per la lista temporanea
-
+ #Giosuè Zannini
  #rimuove la lista dei posti del singolo utente
 def removeElemInTemporaryList(listOfBooking, idmovieSchedule):
     for elem in listOfBooking:
         temporaryBooking[idmovieSchedule].remove(elem)  
-
+ #Giosuè Zannini
  #se la chiave non è presente aggiungila
 def KeyIsInTemporaryList(idmovieSchedule):
     if not (idmovieSchedule in temporaryBooking):
         temporaryBooking[idmovieSchedule] = []
-
+ #Giosuè Zannini
  #se la lista dell'utente non ha nulla in comune aggiungila e ritorna true, altrimenti torna false
 def isNotInTemporaryList(idmovieSchedule, listOfBooking):
     check = True
@@ -72,7 +72,7 @@ def isNotInTemporaryList(idmovieSchedule, listOfBooking):
     if check: #se nessuno sta prenotando questi posti aggiungili alla lista temporanea
         temporaryBooking[idmovieSchedule].extend(listOfBooking)
     return check
-
+ #Giosuè Zannini
  #aggiunge alla lista la lista temporanea
 def addTemporaryListInList(idmovieSchedule, l):
     l.extend(temporaryBooking[idmovieSchedule])
@@ -80,7 +80,7 @@ def addTemporaryListInList(idmovieSchedule, l):
     
       
 #----------------------------Funzioni per il thread timer
-
+ #Giosuè Zannini
 class TimerForBooking(Thread):
     def __init__(self, idmovieSchedule, listOfBooking, current_user, time):
         Thread.__init__(self)
@@ -103,12 +103,12 @@ class TimerForBooking(Thread):
         if not self.stop:    
             removeElemInTemporaryList(self.listOfBooking, self.idmovieSchedule)
         (timeOutBooking.get(self.current_user))[1] = False # metto a false il bool del thread
-        
+ #Giosuè Zannini
  #crea nel dizionario la chiave con current user con elemento il thread timer e fa lo start      
 def startTimer(idmovieSchedule, listOfBooking, time, current_user):
     timeOutBooking[current_user] = [TimerForBooking(idmovieSchedule, listOfBooking, current_user, time), True]
     (timeOutBooking.get(current_user)[0]).start()
-
+ #Giosuè Zannini
  #controlla lo stato del thread, se è ancora attivo lo blocco e torno true altrimenti torno false
 def timerIsAlive(current_user):
     alive = False
@@ -118,6 +118,7 @@ def timerIsAlive(current_user):
         (timeOutBooking.get(current_user)[0]).join()
     timeOutBooking.pop(current_user)
     return alive
+ #Giosuè Zannini
  #verifica se c'è già una prenotazione in corso per questo utente
 def timerBookingInProgress(current_user):
     if timeOutBooking.get(current_user):

@@ -41,9 +41,6 @@ def insertMovie():
     return queryAndTemplate(s,"/tables/movie/insertMovie.html")
 
 #---------------------------------DELETE---------------------------------#
-#
-# TODO opzioni di cancellazione ANDREBBE FATTO CON TRANSACTION PER ATOMICITÀ CON LA SELECT. Penso a vincoloi a livello di db.
-# Penso al caso in cui vedo che non c'è nessuna programmazione collegata ma poi ne aggiunge una. Che succede ? 
 """
     Scenari possibili
             - se non ci sono spettacoli collegati posso eliminare

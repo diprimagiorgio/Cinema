@@ -1,6 +1,6 @@
 from flask import redirect, render_template, request, make_response, url_for, flash
 from flask_login import current_user
-from sqlalchemy import insert, select, join, and_, bindparam
+from sqlalchemy import insert, select, join, bindparam
 from app import app
 from app.shared.login import login_required
 from app.model import movies, genres, movieSchedule, theaters, booking, users, clients

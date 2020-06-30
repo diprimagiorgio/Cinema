@@ -102,15 +102,6 @@ def query3():
     conn.close()
     return resp
     
-#------------------DA COMPLETARE 
-@app.route("/occupazioneSala",methods=['GET','POST'])
-def occupazioneSala():
-    if request.method == 'POST':
-        conn = choiceEngine()
-        query = select([movies.c.id, movies.c.title]).\
-                    where(exists(select([movieSchedule.join(theaters, movieSchedule.c.theater == theaters.c.id)]).\
-                          where(and_(movies.c.id == movieSchedule.c.idMovie, (theaters.c.seatsCapacity / 100) * 75 < (select(count(booking.c.id).\
-                              where(booking.c.idmovieSchedule == movieSchedule.c.id)))))))
-        user = conn.execute(query).fetchone()
-        conn.close()
+
+    
     
