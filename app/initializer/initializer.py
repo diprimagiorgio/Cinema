@@ -84,8 +84,9 @@ def initSchedule():
     conn = engineAdmin.connect() 
     for anno in ANNO:
         for mese in MESE:
-            if(mese == 7):
+            if(mese == "7"):
                 GIORNO = 7
+                giorno = 0
             while giorno <= GIORNO:
                 giorno = giorno + 2           
                 for ora in ORA:
