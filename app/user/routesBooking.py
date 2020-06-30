@@ -1,14 +1,8 @@
 from flask import redirect, render_template, request, make_response, url_for, flash
 from flask_login import current_user
-<<<<<<< HEAD:app/routesBooking.py
 from sqlalchemy import insert, select, join, and_, bindparam
 from app import app
-from app.login import login_required
-=======
-from sqlalchemy import insert, select, join, bindparam, exists, and_, func#TOGLIERLOOOOO
-from app import app
 from app.shared.login import login_required
->>>>>>> master:app/user/routesBooking.py
 from app.model import movies, genres, movieSchedule, theaters, booking, users, clients
 from app.user.functionForBooking import createIntegerListFromQuery, createIntegerListFromString, removeElemInTemporaryList, KeyIsInTemporaryList, isNotInTemporaryList, addTemporaryListInList, startTimer, timerIsAlive, timerBookingInProgress, convertToInt
 from app.pay import pay
@@ -40,17 +34,6 @@ def choicemovie():
     result = conn.execute(query)
     resp = make_response(render_template("/user/logged/choiceMovie.html", result = result))
     conn.close()
-    #-------------------------------------
-    conn = choiceEngine()
-    query = select([movies.c.id, movies.c.title]).\
-                where(~exists(select([movieSchedule.join(theaters, movieSchedule.c.theater == theaters.c.id)]).\
-                      where(and_(movies.c.id == movieSchedule.c.idMovie, 
-                                (theaters.c.seatsCapacity / 100) * 75 < (select([func.count(booking.c.id)])).\
-                          where(booking.c.idmovieSchedule == movieSchedule.c.id)))))
-    user = conn.execute(query).fetchall()
-    conn.close()
-    print("GUARDAAAAAAAAAAAAAAAAAAAAAAAAAA")
-    print(user)
     return resp
 
 
@@ -61,10 +44,7 @@ def choicemovie():
 @login_required()
 def book(idmovieSchedule):
     conn = choiceEngine()
-<<<<<<< HEAD:app/routesBooking.py
-=======
     #mi ritorna il numero della sala e la capienza 
->>>>>>> master:app/user/routesBooking.py
     queryTheater = select([theaters.c.id, theaters.c.seatsCapacity]).\
                    select_from(theaters.join(movieSchedule, theaters.c.id == movieSchedule.c.theater)).\
                    where(movieSchedule.c.id == bindparam('idmovieSchedule'))
@@ -118,10 +98,7 @@ def completeBooking(idmovieSchedule, listOfBooking):
     price = conn.execute(query, {'idmovieSchedule' : idmovieSchedule}).fetchone()['price'] * len(listOfBooking)
     conn.close() 
     if request.method == 'POST':  
-<<<<<<< HEAD:app/routesBooking.py
-=======
         #età minima per lo spettatore e numero sala
->>>>>>> master:app/user/routesBooking.py
         conn = choiceEngine()
         query = select([movies.c.minimumAge, movieSchedule.c.theater]).\
                 select_from(movieSchedule.join(movies, movieSchedule.c.idMovie == movies.c.id)).\
@@ -136,14 +113,9 @@ def completeBooking(idmovieSchedule, listOfBooking):
         viewerAge = [] #età spettatori
         autoCompile = request.form.get("autoCompile") #spunta per inserimento automatico dei dati
         for i in range(len(listOfBooking)):
-<<<<<<< HEAD:app/routesBooking.py
-            if i == 0 and autoCompile:# caso in cui uso i dati dell'utente che sta prenotando
-                conn = choiceEngine()
-=======
             if i == 0 and autoCompile: #caso in cui uso i dati dell'utente che sta prenotando
                 conn = choiceEngine()
                 # ritorna i dati dell'utente
->>>>>>> master:app/user/routesBooking.py
                 query = select([users.c.name, clients.c.birthDate]).\
                         select_from(users.join(clients, users.c.id == clients.c.id)).\
                             where(clients.c.id == current_user.get_id())
@@ -164,12 +136,7 @@ def completeBooking(idmovieSchedule, listOfBooking):
             flash("Età minima non rispettata", "error")
         else:
             if timerIsAlive(current_user.get_id()): #caso in cui il thread è ancora attivo
-<<<<<<< HEAD:app/routesBooking.py
-                #--------------------------FUNZIONE GIORGIO--------------------------
-                if pay(current_user.get_id(), price):
-=======
                 if pay(current_user.get_id(), price):#esegue il pagamento
->>>>>>> master:app/user/routesBooking.py
                     conn = choiceEngine()            
                     #creazione query e inserimento del DB
                     for i in range(len(listOfBooking)):

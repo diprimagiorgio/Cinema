@@ -70,7 +70,7 @@ def removeTheater():
         id = request.form.get("id")
         if id :
 
-            conn = engine.connect()
+            conn = choiceEngine()
             conn = conn.execution_options( isolation_level="SERIALIZABLE" )
             trans = conn.begin()
             try:

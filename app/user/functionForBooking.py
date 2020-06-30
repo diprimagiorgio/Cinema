@@ -1,8 +1,4 @@
 from flask import make_response, render_template
-<<<<<<< HEAD:app/functionForBooking.py
-#from app import app, engine   PENSO NON SERVE
-=======
->>>>>>> master:app/user/functionForBooking.py
 import time 
 from threading import Thread 
 

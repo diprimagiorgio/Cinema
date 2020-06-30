@@ -2,15 +2,9 @@ from flask import redirect, render_template, request, make_response, url_for, fl
 from flask_login import current_user
 from sqlalchemy import insert, select, join, bindparam, desc, func
 from app import app
-<<<<<<< HEAD:app/verifyBooking.py
-from app.login import login_required, Role
-from app.model import movies, genres, movieSchedule, theaters, booking, users, clients
-from app.functionForBooking import createIntegerListFromQuery
-=======
 from app.shared.login import login_required, Role
 from app.model import movies, genres, movieSchedule, theaters, booking, users, clients
 from app.user.functionForBooking import createIntegerListFromQuery
->>>>>>> master:app/manager/verifyBooking.py
 from app.engineFunc import choiceEngine
 import datetime
 
