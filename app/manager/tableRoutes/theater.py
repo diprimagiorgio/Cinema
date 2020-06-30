@@ -91,7 +91,6 @@ def removeTheater():
                         flash(  """Non si può rimuovere la sala {} perchè ci sono proiezioni non ancora andate in onda.\n
                                     Riassegna le proiezioni ad un altra sala. """.format(id), 'error')
                     else:    
- #                       time.sleep(10)
                         #devo mettere non disponibile
                         up = theaters.update().\
                             where(theaters.c.id == bindparam('t_id')).\
@@ -102,7 +101,6 @@ def removeTheater():
                         trans.commit()
                         ret = redirect(url_for('listTheaters'))    
                 else:
-#                    time.sleep(10)
                     #posso cancellarlo
                     rm = theaters.delete().\
                         where(theaters.c.id == bindparam('id'))
