@@ -3,10 +3,11 @@ from sqlalchemy import insert, select, join, delete, and_, func
 from flask_login import LoginManager, UserMixin, current_user, login_user, logout_user
 from app.model import users, movies, genres, movieSchedule, theaters, clients, managers, booking
 from datetime import date, timedelta , datetime
-from app import app, engine
+from app import app
 from app.login import User, Role, login_required, login_manager
 import datetime
 from app.routesBooking import choicemovie
+from app.engineFunc import choiceEngine
 from sqlalchemy.sql.functions import now
 
 @app.route("/statistiche1")
@@ -21,7 +22,7 @@ def query1():
     s = booking.join(movieSchedule, booking.c.idmovieSchedule == movieSchedule.c.id).join(movies, movieSchedule.c.idMovie == movies.c.id).join(genres,movies.c.idGenre == genres.c.id)
     queryCount = select([genres.c.description,func.count(booking.c.id).label('numero'),func.avg(booking.c.viewerAge).label('avgAge')]).select_from(s).group_by(genres.c.description)
     
-    conn = engine.connect()
+    conn = choiceEngine()
     ris1 = conn.execute(queryCount).fetchall()
     print(ris1)
     conn.close()
@@ -29,7 +30,7 @@ def query1():
 
 @app.route("/saldoPerFilm")
 def query2():
-    conn = engine.connect()
+    conn = choiceEngine()
     #incasso per film
     s = booking.join(movieSchedule, booking.c.idmovieSchedule == movieSchedule.c.id).join(movies, movieSchedule.c.idMovie == movies.c.id)
     querynumeroPrenotazioni = select([movies.c.title,func.sum(movieSchedule.c.price).label('sum')]).select_from(s).group_by(movies.c.title).order_by(movies.c.title)
@@ -50,7 +51,7 @@ def query3():
                 duesettimane = date.today() - timedelta(days = 14)
                 mese = date.today() - timedelta(days = 30)
 
-                conn = engine.connect()
+                conn = choiceEngine()
                 #numeri di posti prenotati per sala per film
                 
                 unasettimana = select([func.count(booking.c.id).label('count')]).\
@@ -94,7 +95,7 @@ def query3():
     s3 = select([theaters])#trovo tutte le sale
     s41 = movieSchedule.join(movies, movieSchedule.c.idMovie== movies.c.id)
     s4 = select([func.distinct(movies.c.id).label('id'),movies.c.title]).select_from(s41).order_by(movies.c.title)#trovo solo i film con prenotazioni mi manca il count distinct 
-    conn = engine.connect()
+    conn = choiceEngine()
     sale = conn.execute(s3)
     film = conn.execute(s4)
     resp = make_response(render_template("occupazioneSala.html", theaters = sale, movies = film ))

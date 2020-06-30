@@ -1,0 +1,121 @@
+MERDA ROSA 
+
+ 
+
+ 
+
+ 
+
+userNotLogged lista permessi: 
+
+QUESTO VA DA DISCUTERE 
+
+ 
+
+CREATE ROLE "role_userNotLogged" 
+
+GRANT SELECT, INSERT ON users, clients TO “role_userNotLogged”; 
+
+GRANT SELECT ON managers, movies, "movieSchedule", genres, theaters TO "role_userNotLogged"; 
+
+CREATE USER "userNotLogged" WITH PASSWORD 'secret'; 
+
+GRANT "role_userNotLogged" TO "userNotLogged"; 
+
+ 
+
+ 
+
+ 
+
+userLogged lista permessi: 
+
+ 
+
+CREDITO 
+
++TUTTI QUELLI DELL’UTENTE NON LOGGATO + 
+
+ 
+
+CREATE ROLE “userLogged”; 
+
+ 
+
+  GRANT INSERT ON booking TO "userLogged"; 
+
+ 
+
+GRANT UPDATE (credit) ON clients TO "userLogged"; 
+
+ 
+
+ 
+
+CREATE USER "Logged" WITH PASSWORD 'secret'; 
+
+GRANT “userNotLogged”,  “userLogged" TO “Logged”; 
+
+ 
+
+ 
+
+managers lista permessi:  
+
+CREATE ROLE manager; 
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON genres, theaters, movies, "movieSchedule" TO manager; 
+
+GRANT SELECT ON booking TO manager; 
+
+ 
+
+CREATE USER supervisor WITH PASSWORD 'secret'; 
+
+GRANT manager TO supervisor; 
+
+GRANT SELECT, UPDATE ON genres_id_seq TO "roleManager"; 
+
+ 
+
+ 
+
+Admin lista permessi: 
+
+--- TUTTI QUELLI DEL MANAGER +: 
+
+GRANT INSERT (id) ON managers TO admin; 
+
+ /* solo sul Id cosi non può mettere nessun altro admin in quanto è a false di default 
+
+ 
+
+GRANT SELECT ON managers TO admin;  (DELETE?????) 
+
+ 
+
+CREATE USER administrator WITH PASSWORD 'secret'; 
+
+GRANT admin, manager TO administrator; 
+
+ 
+
+ 
+
+ 
+
+SET ROLE “userNotLogged”, “userLogged”, manager, admin; 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+REVOKE ALL PRIVILEGES ON ALL TABLES IN SCHEMA public FROM role_userNotLogged; 

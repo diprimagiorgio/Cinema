@@ -86,6 +86,6 @@ Abbiamo utilizzato [GitKraken](www.gitkraken.com) per il versionamento. Per vede
 ## Autori
 
 
-* **Luca Bizzotto** - *Area Cliente e Statistiche* 
-* **Giorgio Diprima** - *Area Manager e pagamento* 
-* **Giosuè Zannini** - *Area prenotazioni* 
+* **Luca Bizzotto** - *Area Cliente e Statistiche[mamager]* 
+* **Giorgio Diprima** - *Area Manager, pagamento[clienet] e README* 
+* **Giosuè Zannini** - *Area prenotazioni[cliente] e riepilogo prenotazioni[manager]* 

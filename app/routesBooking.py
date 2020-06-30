@@ -1,11 +1,12 @@
 from flask import redirect, render_template, request, make_response, url_for, flash
 from flask_login import current_user
 from sqlalchemy import insert, select, join, and_, bindparam
-from app import app, engine
+from app import app
 from app.login import login_required
 from app.model import movies, genres, movieSchedule, theaters, booking, users, clients
 from app.functionForBooking import createIntegerListFromQuery, createIntegerListFromString, removeElemInTemporaryList, KeyIsInTemporaryList, isNotInTemporaryList, addTemporaryListInList, startTimer, timerIsAlive, timerBookingInProgress, convertToInt
 from app.pay import pay
+from app.engineFunc import choiceEngine
 import datetime
 
 
@@ -28,7 +29,7 @@ def choicemovie():
             join(genres, movies.c.idGenre == genres.c.id)]).\
             order_by(movieSchedule.c.dateTime).\
             where(movieSchedule.c.dateTime > (datetime.datetime.now() - datetime.timedelta(minutes=15))) # blocco la prenotazione di un film 15 minuti prima della sua visione
-    conn = engine.connect()
+    conn = choiceEngine()
     result = conn.execute(query)
     resp = make_response(render_template("/user/logged/choiceMovie.html", result = result))
     conn.close()
@@ -41,7 +42,7 @@ def choicemovie():
 @app.route('/book/<int:idmovieSchedule>', methods = ['POST', 'GET'])
 @login_required()
 def book(idmovieSchedule):
-    conn = engine.connect()
+    conn = choiceEngine()
     queryTheater = select([theaters.c.id, theaters.c.seatsCapacity]).\
                    select_from(theaters.join(movieSchedule, theaters.c.id == movieSchedule.c.theater)).\
                    where(movieSchedule.c.id == bindparam('idmovieSchedule'))
@@ -67,7 +68,7 @@ def book(idmovieSchedule):
                 flash('Posto\i già occupato\i, cambialo\i', 'error')    
         else:
             flash('Scegliere almeno un posto', 'error') 
-    conn = engine.connect()
+    conn = choiceEngine()
     #mi ritorna i posti già prenotati
     queryBooking = select([booking.c.seatNumber]).\
                    select_from(booking.join(movieSchedule, booking.c.idmovieSchedule == movieSchedule.c.id)).\
@@ -89,14 +90,14 @@ def book(idmovieSchedule):
 def completeBooking(idmovieSchedule, listOfBooking):
     #crea una lista di interi da una stringa contenente i posti da voler prenotare
     listOfBooking = createIntegerListFromString(listOfBooking)
-    conn = engine.connect()
+    conn = choiceEngine()
     query = select([movieSchedule.c.price]).\
             where(movieSchedule.c.id == bindparam('idmovieSchedule'))
     #mi torna il prezzo che deve pagare il cliente per la visione
     price = conn.execute(query, {'idmovieSchedule' : idmovieSchedule}).fetchone()['price'] * len(listOfBooking)
     conn.close() 
     if request.method == 'POST':  
-        conn = engine.connect()
+        conn = choiceEngine()
         query = select([movies.c.minimumAge, movieSchedule.c.theater]).\
                 select_from(movieSchedule.join(movies, movieSchedule.c.idMovie == movies.c.id)).\
                 where(movieSchedule.c.id == bindparam('idmovieSchedule'))
@@ -113,7 +114,7 @@ def completeBooking(idmovieSchedule, listOfBooking):
         print(autoCompile)#--------------------------------------------------
         for i in range(len(listOfBooking)):
             if i == 0 and autoCompile:# caso in cui uso i dati dell'utente che sta prenotando
-                conn = engine.connect()
+                conn = choiceEngine()
                 query = select([users.c.name, clients.c.birthDate]).\
                         select_from(users.join(clients, users.c.id == clients.c.id)).\
                             where(clients.c.id == current_user.get_id())
@@ -136,7 +137,7 @@ def completeBooking(idmovieSchedule, listOfBooking):
             if timerIsAlive(current_user.get_id()): #caso in cui il thread è ancora attivo
                 #--------------------------FUNZIONE GIORGIO--------------------------
                 if pay(current_user.get_id(), price):
-                    conn = engine.connect()            
+                    conn = choiceEngine()            
                     #creazione query e inserimento del DB
                     for i in range(len(listOfBooking)):
                         query = (booking.insert().\

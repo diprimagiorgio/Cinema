@@ -25,24 +25,71 @@ Cosa succede se io modifico l'età minima di visione di un film con prenotazioni
 isogna trovare il modo di mettere un solo admin nel db un vincolo che permetta di metterne solo uno
 
 
-   conn = engine.connect()
-    session = Session(bind=engine)
-    session.connection(execution_options={'isolation_level': 'REPEATABLE READ'})
-    try:
-        #rimuovo il credito dall'utente
-        u_cl = clients.update().\
-                    where(clients.c.id == bindparam('id_cl')).\
-                    values( credit =  result['credit'] - float(amount) )
 
-        session.execute(u_cl, {'id_cl' : id})
+@app.route("/removeTheater", methods=['GET', 'POST'])
+@login_required(Role.SUPERVISOR)
+def removeTheater():
+    if request.method == 'POST':
+        id = request.form.get("id")
+        if id :
+            #TODO questo va fatto sempre in una sessione
 
+            conn = engine.connect()
+            conn = conn.execution_options( isolation_level="SERIALIZABLE" )
+            trans = conn.begin()
+            try:
 
-        session.commit()
-        resp = True
-    except:
-        session.rollback()
-        resp = False
-    finally:
-        conn.close()
-        session.close()
-        return resp
+                #verifico se ci sono spettacoli collegati
+                sel = select([movieSchedule]).\
+                        where( movieSchedule.c.theater == bindparam('id'))
+                
+                #r = conn.execute(sel, {'id' : id} ).fetchone()
+                #if r:
+                if queryHasResult(sel, {'id' : id}, conn = conn):
+                    #verifico se gli spettacoli collegati sono futuri
+                    sel = select([movieSchedule]).\
+                            where( 
+                                and_(
+                                    movieSchedule.c.theater == bindparam('id'),
+                                    movieSchedule.c.dateTime >= datetime.today()#prima avevo now ma today è senza timezone
+                                )
+                            )
+                    #r = conn.execute(sel, {'id' : id} ).fetchone()
+                    if queryHasResult(sel, {'id' : id}, conn = conn):
+                    #if r:
+                        #non posso cancellare
+                        flash(  """Non si può rimuovere la sala {} perchè ci sono proiezioni non ancora andate in onda.\n
+                                    Riassegna le proiezioni ad un altra sala. """.format(id), 'error')
+                    else:    
+                        time.sleep(10)
+                        #devo mettere non disponibile
+                        up = theaters.update().\
+                            where(theaters.c.id == bindparam('t_id')).\
+                            values(available = False)
+                        flash("Sala DISATTIVATA!", 'info')
+                        
+                        conn.execute(up, {'t_id' : id} )
+                        trans.commit()
+                        ret = redirect(url_for('listTheaters'))    
+                        #return queryAndFun(up, 'listTheaters', {'t_id' : id})
+                else:
+                    time.sleep(10)
+                    #posso cancellarlo
+                    rm = theaters.delete().\
+                        where(theaters.c.id == bindparam('id'))
+                    flash("Sala rimossa!", 'info')
+                    conn.execute(rm, {'id' : id} )
+                    trans.commit()
+
+                    ret = redirect(url_for('listTheaters'))    
+                    #return queryAndFun(rm, 'listTheaters', {'id' : id})
+            except:
+                trans.rollback()
+                resp = redirect(url_for('removeTheater'))    
+            finally:
+                conn.close()
+                trans.close()
+
+        else:
+            flash('You have to insert the value to remove', 'error')
+    return queryAndTemplate(selectTheaters, "/tables/theater/removeTheater.html")

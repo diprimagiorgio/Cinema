@@ -1,5 +1,5 @@
 from sqlalchemy import Table, Column, Integer, String, Float, Date, ForeignKey, CheckConstraint, DateTime, Boolean, column
-from app import metadata, engine
+from app import metadata, engineAdmin
 import datetime
 
 
@@ -76,5 +76,5 @@ booking = Table('booking', metadata,
                 CheckConstraint(column('viewerAge') >= 0, name='age_bk_0')
             )
 
-metadata.create_all(engine)
+metadata.create_all(engineAdmin)
 #----------fine tabella

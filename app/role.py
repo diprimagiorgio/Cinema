@@ -12,8 +12,6 @@ def init():
     flash("Database inizializzato correttamente", "info")
     return redirect('/')
 
-
-
 def initAdmin():
     ins = users.insert().values(name="Admin", surname ="Admin", email ="admin@admin.com", password = "secret")    
     
@@ -36,7 +34,7 @@ def initRole():
             """)
     conn.close()
    
-    conn = engine.connect()
+    conn = engineAdmin.connect()
     conn.execute(""" 
             GRANT SELECT, INSERT ON users, clients TO "role_userNotLogged"; 
             GRANT SELECT ON managers, movies, "movieSchedule", genres, theaters TO "role_userNotLogged";
@@ -45,14 +43,14 @@ def initRole():
             """)
     conn.close()
     #---------------------------ROLE E USER userLogged------------------------------------------------#
-    conn = engine.connect()
+    conn = engineAdmin.connect()
     conn.execute("""
             CREATE ROLE "role_userLogged"; 
             CREATE USER logged WITH PASSWORD 'secret'; 
             """)
     conn.close()
    
-    conn = engine.connect()
+    conn = engineAdmin.connect()
     conn.execute(""" 
             GRANT SELECT, INSERT ON booking TO "role_userLogged";
             GRANT UPDATE (credit) ON clients TO "role_userLogged";
@@ -61,14 +59,14 @@ def initRole():
             """)
     conn.close()
     #---------------------ROLE E USER userLogged
-    conn = engine.connect()
+    conn = engineAdmin.connect()
     conn.execute("""
             CREATE ROLE role_manager;
             CREATE USER manager WITH PASSWORD 'secret';  
             """)
     conn.close()
    
-    conn = engine.connect()
+    conn = engineAdmin.connect()
     conn.execute(""" 
            GRANT SELECT, INSERT, UPDATE, DELETE ON genres, theaters, movies, "movieSchedule" TO manager;
            GRANT SELECT ON booking TO manager;

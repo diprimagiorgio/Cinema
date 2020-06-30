@@ -10,18 +10,18 @@ app.config['SECRET_KEY'] = 'Sq9obiBTY7hyb10ga9lja5MgYQNz' #is used to keep the c
 
 #I'm using core and expression language
 
-engine = create_engine(
+engineAdmin = create_engine(
     'postgresql://admin_ilmolo:secret@localhost/cinemaIlMolo',
     isolation_level='SERIALIZABLE',
     echo = True
 )
-engine1 = create_engine(
+engineUserNotLogged = create_engine(
     'postgresql://userNotLogged:secret@localhost/cinemaIlMolo',
 )
-engine2 = create_engine(
+engineUserLogged = create_engine(
     'postgresql://logged:secret@localhost/cinemaIlMolo',
 )
-engine2 = create_engine(
+engineManager = create_engine(
     'postgresql://manager:secret@localhost/cinemaIlMolo',
 )
 
