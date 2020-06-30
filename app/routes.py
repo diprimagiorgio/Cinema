@@ -38,6 +38,7 @@ def logout():
 #Luca Bizzotto
 #registrazione manager
 @app.route('/registerManager',methods= ['GET','POST'])
+@login_required(Role.SUPERVISOR)
 def registerManager():
     if request.method == 'POST': 
         name = request.form.get("name")
@@ -116,31 +117,6 @@ def register():
 
 
 
-#Luca Bizzotto
-@app.route("/accountInfo")
-def account_info() :
-    conn = choiceEngine()
-    join = users.join(clients, users.c.id == clients.c.id)
-    query = select([users,clients]).select_from(join).where(users.c.id == current_user.get_id())
-    u = conn.execute(query)          #ritorna none se non contiene nessuna riga
-    #soldi spesi per cliente 
-    #query che mi restituisce i soldi spesi dal cliente nelle prenotazioni  per ogni genere
-    join = booking.join(movieSchedule, booking.c.idmovieSchedule == movieSchedule.c.id).\
-        join(movies, movieSchedule.c.idMovie == movies.c.id).\
-        join(genres, movies.c.idGenre == genres.c.id)
-    ris = select([func.sum(movieSchedule.c.price).label('spesa'), movies.c.idGenre, genres.c.description]).\
-        select_from(join).\
-        where(current_user.get_id()== booking.c.clientUsername).\
-        group_by(movies.c.idGenre,genres.c.description)
-    y = conn.execute(ris).fetchall()
-    print(y)
-    #finire----------------------------------
-        
-    resp = make_response(render_template("/user/logged/accountInfo.html", infoPersonali = u))
-    conn.close()
-    return resp
-
-
 #Giosuè Zannini
 @app.route("/loginClient", methods=['POST', 'GET'])
 def loginClient():
@@ -187,26 +163,8 @@ def loginManager():
 
 
 
-#-------------------------------------------UPDATE-------------------------------------------------------------------
+
     
-#Luca Bizzotto
-@app.route("/updateCredit",methods = ['GET','POST'])
-def change1():
-    if request.method == 'POST':
-        money = request.form.get("import")
-        conn = choiceEngine()
-        base = select([clients]).where(clients.c.id == current_user.get_id())
-        ris = conn.execute(base).fetchone()
-        if float(money) < 0 :
-            #non si accettano ricariche negative
-            flash("Non puoi inserire valori negativi!",'error')
-            return redirect("/updateCredit")
-        query = clients.update().values(credit = float(money) + float(ris.credit)).where(clients.c.id == current_user.get_id())
-        flash("Ricarica avvenuta con successo!",'info' )
-        conn.execute(query)
-        conn.close()
-        return redirect("/updateCredit")
-    else:
-        return render_template("/user/logged/updateCredit.html")
+
 
 

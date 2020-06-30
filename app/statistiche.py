@@ -17,15 +17,15 @@ def statistiche1():
 
 #--------------------------------------------------------------------------------------------------
 #query per sapere il numero di prenotazioni associate ad ogni genere ed eta' media degli spettatori
+
 @app.route("/numeroPrenotazioniPerGenere")
-@login_required(Role.SUPERVISOR)
+@login_required(Role.ADMIN)
 def query1():
-    
     s = booking.join(movieSchedule, booking.c.idmovieSchedule == movieSchedule.c.id).\
-        join(movies, movieSchedule.c.idMovie == movies.c.id).join(genres,movies.c.idGenre == genres.c.id)
+        join(movies, movieSchedule.c.idMovie == movies.c.id).\
+        join(genres,movies.c.idGenre == genres.c.id)
     queryCount = select([genres.c.description,func.count(booking.c.id).label('numero'),func.avg(booking.c.viewerAge).label('avgAge')]).\
         select_from(s).group_by(genres.c.description)
-    
     conn = choiceEngine()
     ris1 = conn.execute(queryCount).fetchall()
     conn.close()
@@ -34,7 +34,7 @@ def query1():
 #----------------------------------------------------------------------------------------------------
 #query che mi va ad indicare il saldo per ogni film
 @app.route("/saldoPerFilm")
-@login_required(Role.SUPERVISOR)
+@login_required(Role.ADMIN)
 def query2():
     conn = choiceEngine()
     #incasso per film
@@ -55,7 +55,7 @@ def query2():
 #con tre archi di tempo differenti, nell'ultima settimana , nelle ultime due settimane, nell'ultimo mese.
 # da sistemare aggiungere between 
 @app.route("/occupazioneSalaPerFilm",methods=['GET','POST'])
-@login_required(Role.SUPERVISOR)
+@login_required(Role.ADMIN)
 def query3():
     if request.method == 'POST': 
         sala= request.form.get('sale')
@@ -73,7 +73,9 @@ def query3():
                         join(movies,movieSchedule.c.idMovie == movies.c.id)).\
                         where(
                             and_(movieSchedule.c.idMovie == bindparam('film'),#controlla che funzioni bene la clausola where , datetime.now()???
-                                  movieSchedule.c.theater == bindparam('sala'), movieSchedule.c.dateTime.between(bindparam('tempo'),datetime.datetime.now())))
+                                movieSchedule.c.theater == bindparam('sala'),\
+                                movieSchedule.c.dateTime.between(bindparam('tempo'),\
+                                datetime.datetime.now())))
                 
                 titolo = select([movies]).where(movies.c.id == film)
                 ristitolo = conn.execute(titolo).fetchone()
@@ -100,24 +102,6 @@ def query3():
     conn.close()
     return resp
     
-#Giosuè Zannini
-@app.route("/occupazioneSala",methods=['GET','POST'])
-@login_required(Role.SUPERVISOR)
-def occupazioneSala():
-    if request.method == 'POST':
-        perc = request.form.get('percentuale')
-        if perc != 0:
-            conn = choiceEngine()
-            query = select([movies.c.id, movies.c.title]).\
-                        where(~exists(select([movieSchedule.join(theaters, movieSchedule.c.theater == theaters.c.id)]).\
-                              where(and_(movies.c.id == movieSchedule.c.idMovie, 
-                                        ((theaters.c.seatsCapacity / 100) * bindparam('perc')) < (select([func.count(booking.c.id)])).\
-                                  where(booking.c.idmovieSchedule == movieSchedule.c.id)))))
-            movie = conn.execute(query,{'perc' : perc})
-            resp = make_response(render_template("/manager/statistiche/occupazioneSalaPercentualeResult.html", movie = movie, perc = perc))
-            conn.close()
-            return resp
-        flash("Selezionare un valore dal menù a tendina", "error")
-    return render_template("/manager/statistiche/occupazioneSalaPercentuale.html")
+
     
     

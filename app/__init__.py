@@ -36,7 +36,7 @@ from app import statistiche
 from app.initializer import role
 
 from app.manager.tableRoutes import movie, movieSchedule, theater, genre
-from app.user import pay
+from app.user import pay, personalClient
 from app.manager import verifyBooking
 from app.manager import personalArea
 
