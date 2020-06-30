@@ -2,10 +2,10 @@
 
 {% block right%}
 <div class="container mt-5">
-    <h2>Statistiche</h2>
+    <h2>Seleziona la sala ed il film per sapere il numero di prenotazioni associati ad essi avvenute nell'ultimo periodo </h2>
     <form action="/occupazioneSalaPerFilm" method="POST">
         <div class="form-group mt-2">
-            <label>Seleziona la sala per sapere la capienza media per film </label>
+            <label>Seleziona la sala</label>
             <select class="custom-select" name="sale">
               <option selected>Seleziona...</option>
               {% for x in theaters%}
@@ -15,7 +15,7 @@
           </div>    
          
           <div class="form-group mt-2">
-            <label>film </label>
+            <label>Seleziona il titolo del film </label>
             <select class="custom-select" name="film">
               <option selected>Seleziona...</option>
               {% for x in movies%}

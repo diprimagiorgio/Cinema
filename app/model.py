@@ -6,10 +6,6 @@ import datetime
 
     
     
-
-
-
-
 #--------tabella
 users = Table( 'users', metadata,
             Column('id', Integer , primary_key = True, autoincrement=True),
