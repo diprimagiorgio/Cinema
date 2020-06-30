@@ -1,0 +1,20 @@
+{% extends "/manager/statistiche/statistiche1.html" %}
+
+{% block right%}
+<div class="container mt-5">
+    <h2>Statistiche</h2>
+    <form action="/occupazioneSala" method="POST">
+        <div class="form-group mt-2">
+            <label>Seleziona la percentuale di occupazione delle sale</label>
+            <select class="custom-select" name="percentuale">
+              <option value = "0" selected>Seleziona...</option>
+                <option value= "25" >25</option>
+                <option value= "50" >50</option>
+                <option value= "75" >75</option>
+            </select>
+          </div>       
+          <button type="submit" class="btn btn-primary">Esegui</button>
+        </form>
+      </div>
+    
+{% endblock %}
