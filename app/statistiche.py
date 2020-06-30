@@ -55,7 +55,7 @@ def query2():
 #con tre archi di tempo differenti, nell'ultima settimana , nelle ultime due settimane, nell'ultimo mese.
 # da sistemare aggiungere between 
 @app.route("/occupazioneSalaPerFilm",methods=['GET','POST'])
-@login_required(Role.SUPERVISOR)
+@login_required(Role.ADMIN)
 def query3():
     if request.method == 'POST': 
         sala= request.form.get('sale')
