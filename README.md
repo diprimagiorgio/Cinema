@@ -71,6 +71,6 @@ Abbiamo utilizzato [GitKraken](www.gitkraken.com) per il versionamento. Per vede
 ## Autori
 
 
-* **Luca Bizzotto** - *Area Cliente e Statistiche[mamager]* 
+* **Luca Bizzotto** - *Area Cliente e Statistiche[mamager] registrazione* 
 * **Giorgio Diprima** - *Area Manager, pagamento[clienet] e README* 
-* **Giosuè Zannini** - *Area prenotazioni[cliente] e riepilogo prenotazioni[manager]* 
+* **Giosuè Zannini** - *Area prenotazioni[cliente] e riepilogo prenotazioni[manager] login* 

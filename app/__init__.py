@@ -12,7 +12,7 @@ app.config['SECRET_KEY'] = 'Sq9obiBTY7hyb10ga9lja5MgYQNz' #is used to keep the c
 
 engineAdmin = create_engine(
     'postgresql://admin_ilmolo:secret@localhost/cinemaIlMolo',
-    isolation_level='SERIALIZABLE'
+    isolation_level='REPEATABLE READ'
 )
 engineUserNotLogged = create_engine(
     'postgresql://userNotLogged:secret@localhost/cinemaIlMolo',

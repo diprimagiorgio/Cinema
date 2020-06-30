@@ -1,5 +1,4 @@
 from sqlalchemy import  select, bindparam
-
 from app.model import clients, managers
 from app import app
 from app.engineFunc import choiceEngine
