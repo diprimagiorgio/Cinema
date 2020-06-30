@@ -27,7 +27,7 @@ from flask_login import current_user
                                WHERE cg.id = cg2.id  )
     
 """
-
+@app.route("/prova")
 def foo():
     view = text(
     """
@@ -40,10 +40,11 @@ def foo():
 
     """
     )
-    countGenre = CreateView('countGenre', 
-        select([]).
-    
-    )
+ #   countGenre = CreateView('countGenre', 
+ #       select([clients.c.id.label("id"), movies.c.idGenre.label("genredescription"), fun.count(movie.c.genre.id).label("prenotazioni")]).\
+ #           select_from(clients.join(booking, clinets.c.id == booking.c.))
+ #   
+ #   )
     sel = select([countGenre.label("cg")]).\
         where(
             and_(
