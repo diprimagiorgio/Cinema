@@ -29,7 +29,7 @@ def choicemovie():
             join(movies, movieSchedule.c.idMovie == movies.c.id).\
             join(genres, movies.c.idGenre == genres.c.id)]).\
             order_by(movieSchedule.c.dateTime).\
-            where(movieSchedule.c.dateTime > (datetime.datetime.now() - datetime.timedelta(minutes=15))) # blocco la prenotazione di un film 15 minuti prima della sua visione
+            where(movieSchedule.c.dateTime > (datetime.datetime.now() + datetime.timedelta(minutes=15))) # blocco la prenotazione di un film 15 minuti prima della sua visione
     conn = choiceEngine()
     result = conn.execute(query)
     resp = make_response(render_template("/user/logged/choiceMovie.html", result = result))
@@ -122,7 +122,9 @@ def completeBooking(idmovieSchedule, listOfBooking):
                 user = conn.execute(query).fetchone()
                 conn.close()
                 viewer.append(user["name"])
-                viewerAge.append(datetime.date.today().year - user["birthDate"].year)    
+                viewerAge.append(datetime.date.today().year - user["birthDate"].year) 
+                if datetime.date.today().year - user["birthDate"].year < minimumAge:
+                    minAge = False
             else:      
                 viewer.append(request.form.get("viewer[" + str(i) + "]"))
                 viewerAge.append(convertToInt(request.form.get("viewerAge[" + str(i) + "]")))
