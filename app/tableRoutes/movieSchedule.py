@@ -5,7 +5,7 @@ from app.model import movies, movieSchedule, genres, theaters
 from .shared import queryAndTemplate, queryAndFun
 from .theater import selectTheaters
 from datetime import datetime, timedelta
-from app.login import Role, login_required
+from app.shared.login import Role, login_required
 from app.engineFunc import choiceEngine
 
 

@@ -2,7 +2,7 @@ from sqlalchemy import insert, select, func
 from app.model import genres, movies, theaters, movieSchedule, booking, clients, users, managers
 from app import app, engineAdmin
 from datetime import date
-from app.functionForBooking import createIntegerListFromQuery, convertToInt
+from app.user.functionForBooking import createIntegerListFromQuery, convertToInt
 from random import randint
 
 
@@ -70,7 +70,7 @@ def initSchedule():
     MESE = ["6", "7"] #mesi di proiezioni
     GIORNO = 28 #giorni di proiezioni
     ANNO = ["2020"] #anni di proiezioni
-    ORA = ["11:30:00", "14:00:00", "16:30:00", "19:00:00"] #ore di proiezioni
+    ORA = ["14:00:00", "16:30:00", "19:00:00"] #ore di proiezioni
     conn = engineAdmin.connect() 
     movie = select([func.count(movies.c.id)]).\
               select_from(movies)
@@ -80,16 +80,20 @@ def initSchedule():
     N_SALA = createIntegerListFromQuery(conn.execute(theater).fetchall())#lista con tutte le sale              
     conn.close()         
     film = 0
+    giorno = 0
     conn = engineAdmin.connect() 
     for anno in ANNO:
         for mese in MESE:
-            for giorno in range(GIORNO):
+            if(mese == 7):
+                GIORNO = 7
+            while giorno <= GIORNO:
+                giorno = giorno + 2           
                 for ora in ORA:
                     for sala in N_SALA:
                         ins = movieSchedule.insert().\
-                        values(dateTime = anno + "-" + mese + "-" + str(giorno+1) + " " + ora, price = PREZZO, idMovie = (film % N_FILM) + 1, theater = sala)
+                        values(dateTime = anno + "-" + mese + "-" + str(giorno) + " " + ora, price = PREZZO, idMovie = (film % N_FILM) + 1, theater = sala)
                         conn.execute(ins)
-                        film = film + 1              
+                        film = film + 1   
     conn.close()
                 
                 
@@ -99,7 +103,7 @@ def initBooking():
     NOMI = ["Luca", "Giovanni", "Mario", "Lucia", "Anna", "Assunta", "Giorgio", "Davide", "Michele", "Dario", "Valentina", "Sofia", "Daniela", "Gaia"]
     ETA_MIN = 18
     ETA_MAX = 85
-    RIEMPIMENTO_SALA=[-40, -30, -7]
+    RIEMPIMENTO_SALA=[-40, -30, -22]
     conn = engineAdmin.connect() 
     query = select([func.count(movieSchedule.c.id)]).\
               select_from(movieSchedule)
@@ -117,7 +121,7 @@ def initBooking():
         conn = engineAdmin.connect()
         query = select([theaters.c.seatsCapacity]).\
                      select_from(theaters.join(movieSchedule, movieSchedule.c.theater == theaters.c.id)).\
-                     where(movieSchedule.c.id == (schedule))
+                     where(movieSchedule.c.id == (schedule + 1))
         totalSeats = convertToInt(str(conn.execute(query).fetchone()))#numero di posti nella sala
         conn.close()
         conn = engineAdmin.connect() 
@@ -204,8 +208,7 @@ def initTheater():
         {'seatsCapacity': 80},
         {'seatsCapacity': 60},
         {'seatsCapacity': 80},
-        {'seatsCapacity': 40},
-        {'seatsCapacity': 40},
+        {'seatsCapacity': 40}
     ])
     conn.close()
     

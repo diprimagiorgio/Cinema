@@ -6,7 +6,7 @@ from .shared import queryAndTemplate, queryHasResult, queryAndFun
 from datetime import datetime
 import time
 from sqlalchemy.orm import Session
-from app.login import Role, login_required
+from app.shared.login import Role, login_required
 from app.engineFunc import choiceEngine
 
 

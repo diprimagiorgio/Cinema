@@ -2,9 +2,9 @@ from flask import redirect, render_template, request, make_response, url_for, fl
 from flask_login import current_user
 from sqlalchemy import insert, select, join, bindparam, desc, func
 from app import app
-from app.login import login_required, Role
+from app.shared.login import login_required, Role
 from app.model import movies, genres, movieSchedule, theaters, booking, users, clients
-from app.functionForBooking import createIntegerListFromQuery
+from app.user.functionForBooking import createIntegerListFromQuery
 from app.engineFunc import choiceEngine
 import datetime
 
@@ -23,6 +23,7 @@ def verifymovie():
             return redirect(url_for("verifyBook", idmovieSchedule = choice))
         else:
             flash('Effettuare una scelta', 'error')
+    #mi ritorna le info riguardo alle prenotazioni ordinate per data in senso non crescente
     query = select([movieSchedule.c.id, movieSchedule.c.dateTime, movies.c.title, genres.c.description, movies.c.duration, movies.c.minimumAge, movieSchedule.c.theater, movieSchedule.c.price, theaters.c.seatsCapacity, func.count(booking.c.id).label("count")]).\
             select_from(movieSchedule.join(movies, movieSchedule.c.idMovie == movies.c.id).\
             join(genres, movies.c.idGenre == genres.c.id).join(theaters, theaters.c.id == movieSchedule.c.theater).\

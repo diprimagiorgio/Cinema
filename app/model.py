@@ -4,6 +4,10 @@ import datetime
 
 
 
+from sqlalchemy import event, DDL
+
+
+
     
     
 
@@ -77,5 +81,40 @@ booking = Table('booking', metadata,
                 UniqueConstraint('seatNumber', 'idmovieSchedule', name='uix_1')
             )
 
+
+trigger = DDL(
+    "CREATE TRIGGER dt_ins AFTER INSERT ON users "
+    "FOR EACH ROW BEGIN SET NEW.surname='ciccio'; END"
+)
+
+
+event.listen(
+    users,
+    'after_create',
+    trigger.execute_if(dialect='postgresql')
+)
+
+
+
+
+
 metadata.create_all(engineAdmin)
 #----------fine tabella
+
+
+
+
+
+
+
+
+#trigger = DDL(
+#    "CREATE TRIGGER ins_Admin AFTER INSERT ON managers"
+#    "FOR EACH ROW "
+#    "WHEN (1 < (SELECT COUNT(NEW.admin) FROM managers WHERE admin == true))"
+#    "BEGIN SET NEW.admin=false; END"
+#)
+
+
+
+

@@ -3,9 +3,9 @@ from sqlalchemy import select, join, and_, func ,bindparam
 from app.model import users, movies, genres, movieSchedule, theaters, clients, managers, booking
 from datetime import date, timedelta , datetime
 from app import app
-from app.login import User, Role, login_required, login_manager
+from app.shared.login import User, Role, login_required, login_manager
 import datetime
-from app.routesBooking import choicemovie
+from app.user.routesBooking import choicemovie
 from app.engineFunc import choiceEngine
 from sqlalchemy.sql.functions import now
 
@@ -98,5 +98,16 @@ def query3():
     resp = make_response(render_template("/manager/statistiche/occupazioneSala.html", theaters = sale, movies = film ))
     conn.close()
     return resp
-
+    
+#------------------DA COMPLETARE 
+@app.route("/occupazioneSala",methods=['GET','POST'])
+def occupazioneSala():
+    if request.method == 'POST':
+        conn = choiceEngine()
+        query = select([movies.c.id, movies.c.title]).\
+                    where(exists(select([movieSchedule.join(theaters, movieSchedule.c.theater == theaters.c.id)]).\
+                          where(and_(movies.c.id == movieSchedule.c.idMovie, (theaters.c.seatsCapacity / 100) * 75 < (select(count(booking.c.id).\
+                              where(booking.c.idmovieSchedule == movieSchedule.c.id)))))))
+        user = conn.execute(query).fetchone()
+        conn.close()
     

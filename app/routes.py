@@ -4,7 +4,7 @@ from flask_login import LoginManager, UserMixin, current_user, login_user, logou
 from app.model import users, movies, genres, movieSchedule, theaters, clients, managers, booking
 from datetime import date, timedelta , datetime
 from app import app
-from app.login import User, Role, login_required, login_manager, findUser
+from app.shared.login import User, Role, login_required, login_manager, findUser
 from app.engineFunc import choiceEngine
 from sqlalchemy.sql.functions import now
 
@@ -145,13 +145,13 @@ def loginClient():
         email = request.form.get("email")
         password = request.form.get("password")
         user = findUser(clients, email, password, [users])  
-        
         if user:
             login_user(User(user.id, Role.CLIENT))
             flash('Loggato correttamente', 'info')
             return redirect("/choiceMovie")
         flash('Email o password errate riprovare!', 'error')
     return render_template("/user/noLogged/loginClient.html")
+
 
 #Giosuè Zannini
 @app.route("/loginManager", methods=['POST', 'GET'])
@@ -176,17 +176,8 @@ def loginManager():
         flash('Email o password errate riprovare!', 'error')       
     return render_template("/manager/shared/loginManager.html")
 
-    #potrei fare che se admin vedo 
-    #               il bilancio
-    #               la possibilità di registrare menager
-    #               le tabelle 
-
-    #se manager vede le tabelle
 
 
-
-
-    
 #Luca Bizzotto
 @app.route("/updateCredit",methods = ['GET','POST'])
 def change1():
