@@ -17,15 +17,15 @@ def statistiche1():
 
 #--------------------------------------------------------------------------------------------------
 #query per sapere il numero di prenotazioni associate ad ogni genere ed eta' media degli spettatori
+
 @app.route("/numeroPrenotazioniPerGenere")
-@login_required(Role.SUPERVISOR)
+@login_required(Role.ADMIN)
 def query1():
-    
     s = booking.join(movieSchedule, booking.c.idmovieSchedule == movieSchedule.c.id).\
-        join(movies, movieSchedule.c.idMovie == movies.c.id).join(genres,movies.c.idGenre == genres.c.id)
+        join(movies, movieSchedule.c.idMovie == movies.c.id).\
+        join(genres,movies.c.idGenre == genres.c.id)
     queryCount = select([genres.c.description,func.count(booking.c.id).label('numero'),func.avg(booking.c.viewerAge).label('avgAge')]).\
         select_from(s).group_by(genres.c.description)
-    
     conn = choiceEngine()
     ris1 = conn.execute(queryCount).fetchall()
     conn.close()
@@ -34,7 +34,7 @@ def query1():
 #----------------------------------------------------------------------------------------------------
 #query che mi va ad indicare il saldo per ogni film
 @app.route("/saldoPerFilm")
-@login_required(Role.SUPERVISOR)
+@login_required(Role.ADMIN)
 def query2():
     conn = choiceEngine()
     #incasso per film
@@ -73,7 +73,9 @@ def query3():
                         join(movies,movieSchedule.c.idMovie == movies.c.id)).\
                         where(
                             and_(movieSchedule.c.idMovie == bindparam('film'),#controlla che funzioni bene la clausola where , datetime.now()???
-                                  movieSchedule.c.theater == bindparam('sala'), movieSchedule.c.dateTime.between(bindparam('tempo'),datetime.datetime.now())))
+                                movieSchedule.c.theater == bindparam('sala'),\
+                                movieSchedule.c.dateTime.between(bindparam('tempo'),\
+                                datetime.datetime.now())))
                 
                 titolo = select([movies]).where(movies.c.id == film)
                 ristitolo = conn.execute(titolo).fetchone()
