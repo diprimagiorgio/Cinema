@@ -1,5 +1,5 @@
 import sqlalchemy
-from app.login import Role, current_user
+from app.shared.login import Role, current_user
 from app import engineAdmin, engineManager, engineUserLogged, engineUserNotLogged
 
 

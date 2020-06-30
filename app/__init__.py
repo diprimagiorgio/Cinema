@@ -12,8 +12,7 @@ app.config['SECRET_KEY'] = 'Sq9obiBTY7hyb10ga9lja5MgYQNz' #is used to keep the c
 
 engineAdmin = create_engine(
     'postgresql://admin_ilmolo:secret@localhost/cinemaIlMolo',
-    isolation_level='SERIALIZABLE',
-    echo = True
+    isolation_level='SERIALIZABLE'
 )
 engineUserNotLogged = create_engine(
     'postgresql://userNotLogged:secret@localhost/cinemaIlMolo',
@@ -31,12 +30,16 @@ engineManager = create_engine(
 metadata = MetaData ()
 
 from app import model
-from app import login
+from app.shared import login
 from app import routes
 from app import statistiche
-from app import role
+from app.initializer import role
 
-from app.tableRoutes import movie, movieSchedule, theater, genre
-from app import initializer, pay, routesBooking, verifyBooking
+from app.manager.tableRoutes import movie, movieSchedule, theater, genre
+from app.user import pay
+from app.manager import verifyBooking
+from app.manager import personalArea
+
+from app.user import routesBooking
 #bisogna fare anche per genre
 

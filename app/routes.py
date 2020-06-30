@@ -4,7 +4,7 @@ from flask_login import LoginManager, UserMixin, current_user, login_user, logou
 from app.model import users, movies, genres, movieSchedule, theaters, clients, managers, booking
 from datetime import date, timedelta , datetime
 from app import app
-from app.login import User, Role, login_required, login_manager, findUser
+from app.shared.login import User, Role, login_required, login_manager, findUser
 from app.engineFunc import choiceEngine
 from sqlalchemy.sql.functions import now
 
@@ -24,19 +24,6 @@ def index():
     if current_user.is_authenticated and current_user.role > Role.CLIENT:
         return render_template("/manager/shared/layout.html")
     return render_template("/user/shared/layout.html")
-
-@app.route('/dataBase')
-def dataBase():
-    return render_template("/tables/menuTable.html")
-    
-@app.route('/financialReport')
-def financialReport():
-    sel = select([managers]).\
-            where( managers.c.admin == True)
-    conn = choiceEngine()
-    res = conn.execute(sel).fetchone()
-    conn.close()
-    return render_template("/manager/admin/financialReport.html", result = res)
 
     
     
@@ -172,6 +159,7 @@ def loginClient():
         flash('Email o password errate riprovare!', 'error')
     return render_template("/user/noLogged/loginClient.html")
 
+
 #Giosuè Zannini
 @app.route("/loginManager", methods=['POST', 'GET'])
 def loginManager():
@@ -195,12 +183,7 @@ def loginManager():
         flash('Email o password errate riprovare!', 'error')       
     return render_template("/manager/shared/loginManager.html")
 
-    #potrei fare che se admin vedo 
-    #               il bilancio
-    #               la possibilità di registrare menager
-    #               le tabelle 
 
-    #se manager vede le tabelle
 
 
 

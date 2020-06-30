@@ -4,15 +4,17 @@ from flask import  request, flash, redirect, url_for, render_template
 from app.model import movies, genres, movieSchedule
 from .shared import queryAndTemplate, queryAndFun, queryHasResult
 from datetime import datetime
-from app.login import Role, login_required
+from app.shared.login import Role, login_required
 from app.engineFunc import choiceEngine
 
+#file di Diprima Giorgio
 #---------------------------------SELECT---------------------------------#
+#Seleziono tutti i film disponibili
 selectMovies = s = select([movies.\
             join(genres, genres.c.id == movies.c.idGenre)
         ]).\
             where( movies.c.available == True )
-#è sufficiente fare una join perchè tutti i film hanno un genere collegato
+
 @app.route("/listMovies")       
 @login_required(Role.SUPERVISOR)
 def listMovies():
@@ -90,7 +92,11 @@ def removeMovie():
     s = select([movies])
     return queryAndTemplate(s, '/tables/movie/removeMovie.html')
 #---------------------------------UPDATE---------------------------------#
+
+#elenca tutti i film e i generi. Poi l'utente seleziona un film e vene passato in modifyMovie, dove avviene l'effettiva modifica
+
 @app.route('/selectMovieToUpdate', methods=['GET', 'POST'])
+@login_required(Role.SUPERVISOR)
 def selectMovieToUpdate():
     if request.method == 'POST':
         id = request.form.get('choosed')
@@ -106,12 +112,12 @@ def selectMovieToUpdate():
         else:
             flash('Inserire i dati richiesti !', 'error')
 
-#TODO da sistemare se non riesco per quel cazzo di id doppio uso il from, il problema è il doppio id, sarebbe meglio usare selectMovie
     s = select([movies.c.id, movies.c.title, movies.c.duration, movies.c.minimumAge, genres.c.description]).\
             where( and_( movies.c.idGenre == genres.c.id, movies.c.available ==True))
     return queryAndTemplate(s, "/tables/movie/updateMovie.html")
 
 @app.route('/modifyMovie/<movieID>', methods=['POST'])
+@login_required(Role.SUPERVISOR)
 def modifyMovie(movieID):
     title = request.form.get("title")
     age = request.form.get("age")
@@ -125,4 +131,3 @@ def modifyMovie(movieID):
         return queryAndFun(ins, 'listMovies',
             {'m_id' : movieID, 'title' : title, 'minimumAge': age, 'duration' : duration, 'idGenre' : genre} )
     flash("Dati mancanti", 'error')
-

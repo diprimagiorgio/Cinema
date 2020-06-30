@@ -4,6 +4,10 @@ import datetime
 
 
 
+from sqlalchemy import event, DDL
+
+
+
     
     
 #--------tabella
@@ -75,3 +79,21 @@ booking = Table('booking', metadata,
 
 metadata.create_all(engineAdmin)
 #----------fine tabella
+
+
+
+
+
+
+
+
+#trigger = DDL(
+#    "CREATE TRIGGER ins_Admin AFTER INSERT ON managers"
+#    "FOR EACH ROW "
+#    "WHEN (1 < (SELECT COUNT(NEW.admin) FROM managers WHERE admin == true))"
+#    "BEGIN SET NEW.admin=false; END"
+#)
+
+
+
+

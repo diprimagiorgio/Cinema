@@ -2,10 +2,10 @@ from flask import redirect, render_template, request, make_response, url_for, fl
 from flask_login import current_user
 from sqlalchemy import insert, select, join, and_, bindparam
 from app import app
-from app.login import login_required
+from app.shared.login import login_required
 from app.model import movies, genres, movieSchedule, theaters, booking, users, clients
-from app.functionForBooking import createIntegerListFromQuery, createIntegerListFromString, removeElemInTemporaryList, KeyIsInTemporaryList, isNotInTemporaryList, addTemporaryListInList, startTimer, timerIsAlive, timerBookingInProgress, convertToInt
-from app.pay import pay
+from app.user.functionForBooking import createIntegerListFromQuery, createIntegerListFromString, removeElemInTemporaryList, KeyIsInTemporaryList, isNotInTemporaryList, addTemporaryListInList, startTimer, timerIsAlive, timerBookingInProgress, convertToInt
+from app.user.pay import pay
 from app.engineFunc import choiceEngine
 import datetime
 
@@ -24,6 +24,7 @@ def choicemovie():
             flash("Hai già una prenotazione in corso", "error")
         else:
             flash('Effettuare una scelta', 'error')
+    # mi ritorna tutti i film in programmazione futura
     query = select([movieSchedule.\
             join(movies, movieSchedule.c.idMovie == movies.c.id).\
             join(genres, movies.c.idGenre == genres.c.id)]).\
@@ -43,10 +44,10 @@ def choicemovie():
 @login_required()
 def book(idmovieSchedule):
     conn = choiceEngine()
+    #mi ritorna il numero della sala e la capienza 
     queryTheater = select([theaters.c.id, theaters.c.seatsCapacity]).\
                    select_from(theaters.join(movieSchedule, theaters.c.id == movieSchedule.c.theater)).\
                    where(movieSchedule.c.id == bindparam('idmovieSchedule'))
-    #mi ritorna il numero della sala e la capienza 
     infoTheater = conn.execute(queryTheater, {'idmovieSchedule' : idmovieSchedule}).fetchone()
     conn.close()
     theaterName = infoTheater['id'] #numero della sala
@@ -60,7 +61,7 @@ def book(idmovieSchedule):
                 listOfBooking.append(i + 1) #popolo la lista
         if listOfBooking:#caso in cui ha scelto almeno un posto
             if isNotInTemporaryList(idmovieSchedule, listOfBooking):#caso in cui non ha scelto posti già in fase di prenotazione, vengono aggiunti alla temporary list
-                seconds = len(listOfBooking) * 30 #tempo di prenotazione dato all'utente
+                seconds = len(listOfBooking) * 60 #tempo di prenotazione dato all'utente
                 startTimer(idmovieSchedule, listOfBooking, seconds, current_user.get_id())
                 flash("Hai a disposizione %d secondi per completare la prenotazione" % seconds,"info")
                 return redirect(url_for("completeBooking", idmovieSchedule = idmovieSchedule, listOfBooking = listOfBooking))
@@ -97,24 +98,24 @@ def completeBooking(idmovieSchedule, listOfBooking):
     price = conn.execute(query, {'idmovieSchedule' : idmovieSchedule}).fetchone()['price'] * len(listOfBooking)
     conn.close() 
     if request.method == 'POST':  
+        #età minima per lo spettatore e numero sala
         conn = choiceEngine()
         query = select([movies.c.minimumAge, movieSchedule.c.theater]).\
                 select_from(movieSchedule.join(movies, movieSchedule.c.idMovie == movies.c.id)).\
                 where(movieSchedule.c.id == bindparam('idmovieSchedule'))
-        #età minima per lo spettatore e numero sala
         info = conn.execute(query, {'idmovieSchedule' : idmovieSchedule}).fetchone()
         conn.close()
-        minimumAge = info['minimumAge'] #età minima 
-        theaterName = info['theater'] #numero sala
+        minimumAge = info['minimumAge']
+        theaterName = info['theater']
         correct = True #gestisce se sono stati inseriti i dati in modo corretto
         minAge = True #gestisce l'età minima
         viewer = [] #nome spettatori
         viewerAge = [] #età spettatori
         autoCompile = request.form.get("autoCompile") #spunta per inserimento automatico dei dati
-        print(autoCompile)#--------------------------------------------------
         for i in range(len(listOfBooking)):
-            if i == 0 and autoCompile:# caso in cui uso i dati dell'utente che sta prenotando
+            if i == 0 and autoCompile: #caso in cui uso i dati dell'utente che sta prenotando
                 conn = choiceEngine()
+                # ritorna i dati dell'utente
                 query = select([users.c.name, clients.c.birthDate]).\
                         select_from(users.join(clients, users.c.id == clients.c.id)).\
                             where(clients.c.id == current_user.get_id())
@@ -135,8 +136,7 @@ def completeBooking(idmovieSchedule, listOfBooking):
             flash("Età minima non rispettata", "error")
         else:
             if timerIsAlive(current_user.get_id()): #caso in cui il thread è ancora attivo
-                #--------------------------FUNZIONE GIORGIO--------------------------
-                if pay(current_user.get_id(), price):
+                if pay(current_user.get_id(), price):#esegue il pagamento
                     conn = choiceEngine()            
                     #creazione query e inserimento del DB
                     for i in range(len(listOfBooking)):

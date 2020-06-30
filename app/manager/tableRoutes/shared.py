@@ -1,6 +1,6 @@
 from app import app
 from flask import redirect, render_template, make_response, url_for
-from app.engineFunc import choiceEngine
+from app.engineFunc import choiceEngine, engineAdmin
 
 #def queryHasResult(q):
 #    conn = choiceEngine()
@@ -8,15 +8,13 @@ from app.engineFunc import choiceEngine
 #    conn.close()
 #    return True if result else False
 
-def queryHasResult(q, args = None):
-    conn = choiceEngine()
+def queryHasResult(q, args = None, conn = engineAdmin.connect()):
     if args:
         result = conn.execute(q, args).fetchone()
     else:
         result = conn.execute(q).fetchone()
     conn.close()
     return True if result else False
-
 
 def queryAndTemplate(s, htmlTemplate, otherPar=""):
     conn = choiceEngine()
