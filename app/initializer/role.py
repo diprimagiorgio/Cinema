@@ -1,5 +1,5 @@
 from app import app, engineAdmin
-from app.initializer import initializer
+from app.initializer.initializer import initializer
 from flask import redirect, flash
 
 @app.route("/init")

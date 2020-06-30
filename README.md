@@ -6,22 +6,7 @@ Questa applicazione serve a gestire le prenotazioni, lo storico ed il database d
 Quest istruzioni permettono l'istallazione del progetto in locale con l'obbiettivo di testarne il funzionamento
 
 ### Prerequisiti
-hai bisogno di installare postgres e  per installarlo è sufficiente
-
-```
-Non lo so
-```
-hai bisogno di avere un ambiente Python funzionante
-
-```
-Non so nemmeno questo
-```
-
-poi magari anche altro
-
-```
-Che non so
-```
+Avere installato postgress e un ambiente python 
 
 ### Installazione
 Queste sono le istruzioni step by step utili per l'istallazione, prima di avviarel'applicazione
@@ -72,7 +57,7 @@ Per gli avvi successivi è necessario rieseguire i primi due punti del paragafro
 
 
 
-## Built With
+## Costruito con
 
 * [Flask](https://flask.palletsprojects.com/en/1.1.x/) - Il web framework usato
 * [SQLAlchemy](https://www.sqlalchemy.org/) - Libreria per interfacciarsi al database

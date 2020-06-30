@@ -25,19 +25,6 @@ def index():
         return render_template("/manager/shared/layout.html")
     return render_template("/user/shared/layout.html")
 
-@app.route('/dataBase')
-def dataBase():
-    return render_template("/tables/menuTable.html")
-    
-@app.route('/financialReport')
-def financialReport():
-    sel = select([managers]).\
-            where( managers.c.admin == True)
-    conn = choiceEngine()
-    res = conn.execute(sel).fetchone()
-    conn.close()
-    return render_template("/manager/admin/financialReport.html", result = res)
-
     
     
 

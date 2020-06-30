@@ -5,7 +5,7 @@ from app import app
 from app.shared.login import login_required
 from app.model import movies, genres, movieSchedule, theaters, booking, users, clients
 from app.user.functionForBooking import createIntegerListFromQuery, createIntegerListFromString, removeElemInTemporaryList, KeyIsInTemporaryList, isNotInTemporaryList, addTemporaryListInList, startTimer, timerIsAlive, timerBookingInProgress, convertToInt
-from app.pay import pay
+from app.user.pay import pay
 from app.engineFunc import choiceEngine
 import datetime
 
