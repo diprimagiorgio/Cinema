@@ -32,12 +32,11 @@ metadata = MetaData ()
 from app import model
 from app.shared import login
 from app import routes
-from app import statistiche
 from app.initializer import role
 
 from app.manager.tableRoutes import movie, movieSchedule, theater, genre
 from app.user import pay, personalClient
-from app.manager import verifyBooking
+from app.manager import verifyBooking, statistiche
 from app.manager import personalArea
 
 from app.user import routesBooking
