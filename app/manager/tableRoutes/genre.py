@@ -1,6 +1,6 @@
 from app import app
 from sqlalchemy import insert, select, delete, bindparam
-from flask import  request, flash, render_template, redirect, url_for
+from flask import  request, flash, render_template, redirect, url_for, make_response
 from app.model import genres, movies
 from .shared import queryAndTemplate, queryAndFun
 import time
@@ -53,7 +53,7 @@ def removeGenre():
                 resp = redirect(url_for( 'listGenres'))
             except:
                 flash('Il genere ha dei film collegati, sei sicuro di non volerlo modificare?', 'error')
-                resp = redirect(url_for('removeGenre'))
+                resp = redirect(url_for('removeGenre')) 
             finally:
                 conn.close()
                 return resp

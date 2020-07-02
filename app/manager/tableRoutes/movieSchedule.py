@@ -1,8 +1,8 @@
 from app import app
 from sqlalchemy import insert, select, join, delete, outerjoin, bindparam, and_, text
-from flask import  request, flash, make_response, render_template
+from flask import  request, flash, redirect, url_for, render_template, make_response
 from app.model import movies, movieSchedule, genres, theaters
-from .shared import queryAndTemplate, queryAndFun
+from .shared import queryAndTemplate, queryAndFun, queryHasResultWithConnection
 from .theater import selectTheaters
 from datetime import datetime, timedelta
 from app.shared.login import Role, login_required
@@ -54,45 +54,54 @@ def insertShowTime():
         if date and price and movie and theater:
 
             #controllo che l'inserimento non porti a sovrapposizione di spettacoli
-
-            #Trovo la durata del film che voglio andare a mettere in proiezione
-            sel = select([movies]).where(movies.c.id == bindparam('id_movie'))
             conn = choiceEngine()
-            result = conn.execute(sel,{ 'id_movie' : movie}).fetchone()
-            conn.close()
-            runningTime = result['duration']
-            date = datetime.strptime(date, '%Y-%m-%dT%H:%M')
-            end = date + timedelta(minutes=runningTime)
+            conn = conn.execution_options( isolation_level="SERIALIZABLE" )
+            trans = conn.begin()
+            try:
+                #Trovo la durata del film che voglio andare a mettere in proiezione
+                sel = select([movies]).where(movies.c.id == bindparam('id_movie'))
+                result = conn.execute(sel,{ 'id_movie' : movie}).fetchone()
+                runningTime = result['duration']
+                date = datetime.strptime(date, '%Y-%m-%dT%H:%M')
+                end = date + timedelta(minutes=runningTime)
 
-            #verifico che il film che volgio inserire:
-            #       - inizi dopo il film attualmente in proiezione
-            #       o
-            #       - finisca prima del film attualmente in proiezione
-            sel = select([movieSchedule, movies]).\
-                    where(
-                        and_(
-                            movieSchedule.c.idMovie == movies.c.id,
-                            movieSchedule.c.theater == bindparam('theater'),
-                            movieSchedule.c.dateTime +  text("interval '60 seconds'") * movies.c.duration >= bindparam('date'), 
-                            movieSchedule.c.dateTime  <= end, 
-                            )
-                    )
-            conn = choiceEngine()
-            result = conn.execute(sel,{ 'theater' : theater,'date': date}).fetchone()
-            conn.close()
-            #se c'è un risultato allora la sala è occupata
-            if(result):
-                flash("Sala occupata! Cambia sala o orario", 'error')
-            else:        
-                #inserisco il film nel database
-                ins = movieSchedule.insert().\
-                    values(dateTime = date, price = price, idMovie = movie, theater = theater)
-                flash("Spettacolo inserito con successo", 'info')
-                return queryAndFun(ins, 'listShowTime')
+                #verifico che il film che volgio inserire:
+                #       - inizi dopo il film attualmente in proiezione
+                #       o
+                #       - finisca prima del film attualmente in proiezione
+                sel = select([movieSchedule, movies]).\
+                        where(
+                            and_(
+                                movieSchedule.c.idMovie == movies.c.id,
+                                movieSchedule.c.theater == bindparam('theater'),
+                                movieSchedule.c.dateTime +  text("interval '60 seconds'") * movies.c.duration >= bindparam('date'), 
+                                movieSchedule.c.dateTime  <= end, 
+                                )
+                        )
+                #se c'è un risultato allora la sala è occupata
+                if(queryHasResultWithConnection(sel, conn, { 'theater' : theater,'date': date} )):
+                    flash("Sala occupata! Cambia sala o orario", 'error')
+                    raise
+                else:        
+                    #inserisco il film nel database
+                    ins = movieSchedule.insert().\
+                        values(dateTime = bindparam('date'), price = bindparam('price'), idMovie = bindparam('movie'), theater = bindparam('theater'))
+                    flash("Spettacolo inserito con successo", 'info')
+                    conn.execute(ins, {'date' : date, 'price' : price ,'movie' : movie ,'theater' : theater } )
+                    trans.commit()
+                    ret = redirect(url_for('listShowTime'))
+            except:
+                trans.rollback()
+                ret = redirect(url_for('insertShowTime'))
+            finally:
+                conn.close()
+                trans.close()
+                return ret
+
         else:
             flash('Dati mancanti', 'error')
     s1 = selectTheaters #trovo tutte le sale
-    s2 = select([movies]) #trovo tutti i film
+    s2 = select([movies]).where(movies.c.available == True) #trovo tutti i film
     conn = choiceEngine()
     mv = conn.execute(s2)
     th = conn.execute(s1)
