@@ -54,7 +54,7 @@ movieSchedule = Table('movieSchedule', metadata,
                     Column('dateTime',DateTime,nullable = False),
                     Column('price', Float, nullable = False),
                     Column('idMovie', None, ForeignKey('movies.id', onupdate="CASCADE", ondelete="NO ACTION" ), nullable = False),
-                    Column('theater', None, ForeignKey(column='theaters.id', onupdate="CASCADE", ondelete="SET NULL"), nullable = False),#,  nullable = False) perchè se voglio cancellare un theater ...
+                    Column('theater', None, ForeignKey(column='theaters.id', onupdate="CASCADE", ondelete="SET NULL"), nullable = False),
                     CheckConstraint(column('price') >= 0, name='price_ms_0')     
                 )
 
