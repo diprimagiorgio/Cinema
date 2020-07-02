@@ -8,26 +8,11 @@ from app.shared.login import User, Role, login_required, login_manager, findUser
 from app.engineFunc import choiceEngine
 from sqlalchemy.sql.functions import now
 
-
-#utlizzo l'interfaccia core e la modalita di utilizzo expression language
-#TODO cercare di capire come fare, per tipo io vorrei login prima stampare la pagina e poi ricevere i dat e bello o brutto
-#@login_required
-
-
-
-
-
-
-
 @app.route('/')
 def index():
     if current_user.is_authenticated and current_user.role > Role.CLIENT:
         return render_template("/manager/shared/layout.html")
     return render_template("/user/shared/layout.html")
-
-    
-    
-
 
 @app.route('/logout')
 @login_required()
@@ -115,8 +100,6 @@ def register():
     return render_template("/user/noLogged/register.html") 
 
 
-
-
 #Giosuè Zannini
 @app.route("/loginClient", methods=['POST', 'GET'])
 def loginClient():
@@ -158,13 +141,3 @@ def loginManager():
                 return redirect("/financialReport")
         flash('Email o password errate riprovare!', 'error')       
     return render_template("/manager/shared/loginManager.html")
-
-
-
-
-
-
-    
-
-
-

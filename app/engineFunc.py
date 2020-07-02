@@ -2,9 +2,6 @@ import sqlalchemy
 from app.shared.login import Role, current_user
 from app import engineAdmin, engineManager, engineUserLogged, engineUserNotLogged
 
-
-
-
 def choiceEngine():
     if not current_user.is_authenticated:
         conn = engineUserNotLogged.connect()
@@ -16,4 +13,3 @@ def choiceEngine():
         else:
             conn = engineAdmin.connect()
     return conn
-        

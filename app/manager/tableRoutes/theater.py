@@ -2,7 +2,7 @@ from app import app
 from sqlalchemy import insert, select, delete, and_, bindparam
 from flask import  request, flash, make_response, render_template, redirect, url_for
 from app.model import theaters, movieSchedule
-from .shared import queryAndTemplate, queryHasResult, queryAndFun
+from .shared import queryAndTemplate, queryHasResult, queryAndFun, queryHasResultWithConnection
 from datetime import datetime
 import time
 from app.shared.login import Role, login_required
@@ -77,7 +77,8 @@ def removeTheater():
                 #verifico se ci sono spettacoli collegati
                 sel = select([movieSchedule]).\
                         where( movieSchedule.c.theater == bindparam('id'))
-                if queryHasResult(sel, {'id' : id}, conn = conn):
+                if queryHasResultWithConnection(sel, conn, {'id' : id}):
+
                     #verifico se gli spettacoli collegati sono futuri
                     sel = select([movieSchedule]).\
                             where( 
@@ -86,7 +87,9 @@ def removeTheater():
                                     movieSchedule.c.dateTime >= datetime.today()
                                 )
                             )
-                    if queryHasResult(sel, {'id' : id}, conn = conn):
+                    if queryHasResultWithConnection(sel, conn, {'id' : id}):
+                        print("punto 2a!")
+
                         #non posso cancellare
                         flash(  """Non si può rimuovere la sala {} perchè ci sono proiezioni non ancora andate in onda.\n
                                     Riassegna le proiezioni ad un altra sala. """.format(id), 'error')
@@ -101,6 +104,8 @@ def removeTheater():
                         trans.commit()
                         ret = redirect(url_for('listTheaters'))    
                 else:
+                    print("punto 3!")
+
                     #posso cancellarlo
                     rm = theaters.delete().\
                         where(theaters.c.id == bindparam('id'))
