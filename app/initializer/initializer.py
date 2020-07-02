@@ -74,7 +74,7 @@ def initSchedule():
     conn = engineAdmin.connect() 
     movie = select([func.count(movies.c.id)]).\
               select_from(movies)
-    N_FILM = convertToInt(str(conn.execute(movie).fetchone()))#numero di idmovie disponibili
+    N_FILM = convertToInt(str(conn.execute(movie).fetchone())) - 1#numero di idmovie disponibili
     theater = select([theaters.c.id]).\
               select_from(theaters)
     N_SALA = createIntegerListFromQuery(conn.execute(theater).fetchall())#lista con tutte le sale              
@@ -87,6 +87,8 @@ def initSchedule():
             if(mese == "7"):
                 GIORNO = 7
                 giorno = 0
+                N_SALA.pop(3)
+                N_FILM = N_FILM - 1
             while giorno <= GIORNO:
                 giorno = giorno + 2           
                 for ora in ORA:
