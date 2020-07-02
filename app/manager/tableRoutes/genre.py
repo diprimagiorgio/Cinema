@@ -1,8 +1,8 @@
 from app import app
 from sqlalchemy import insert, select, delete, bindparam
-from flask import  request, flash, render_template, redirect, url_for
+from flask import  request, flash, render_template, redirect, url_for, make_response
 from app.model import genres, movies
-from .shared import queryAndTemplate, queryAndFun, queryHasResult
+from .shared import queryAndTemplate, queryAndFun
 import time
 from app.shared.login import Role, login_required
 from app.engineFunc import choiceEngine
@@ -30,13 +30,9 @@ def insertGenre():
 
 #---------------------------------DELETE---------------------------------#
 """
-    La cancellazione può avvenire se
-            - non ci sono film collegati
-    Ci sono due i casi in cui posso accorgermi che c'è un film collegato:
-        - dopo la select se questa ha risultati, quindi per un inserimento precedente o
-        - dopo che io ho finito la select, generando un errore nella remove
-            in quanto viola il vincolo di integrità della foreign key no action.
-            In questo caso un altro utente ha effettuato un inserimento dopo l'esecuzione della select
+    La cancellazione può avvenire se non ci sono film collegati.
+    Se ci sono film collegati il DBMS genererà un errore nella remove
+    in quanto viola il vincolo di integrità della foreign key no action.
 """
 #DIPRIMA GIORGIO 
 @app.route('/removeGenre', methods=['GET','POST'])
@@ -57,7 +53,7 @@ def removeGenre():
                 resp = redirect(url_for( 'listGenres'))
             except:
                 flash('Il genere ha dei film collegati, sei sicuro di non volerlo modificare?', 'error')
-                resp = redirect(url_for('removeGenre'))
+                resp = redirect(url_for('removeGenre')) 
             finally:
                 conn.close()
                 return resp
@@ -77,7 +73,6 @@ def selectGenreToUpdate():
         if id:
             sel = select([genres]).\
                 where(genres.c.id == bindparam('id'))
-            #TODO forse si potrebbe mettere in shared, ma devo avere il parametro e il fetchone
             conn = choiceEngine()
             result = conn.execute(sel, {'id' : id}).fetchone()
             conn.close()

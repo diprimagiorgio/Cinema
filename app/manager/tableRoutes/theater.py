@@ -1,8 +1,8 @@
 from app import app
 from sqlalchemy import insert, select, delete, and_, bindparam
-from flask import  request, flash, make_response, render_template, redirect, url_for
+from flask import  request, flash, redirect, url_for, render_template, make_response
 from app.model import theaters, movieSchedule
-from .shared import queryAndTemplate, queryHasResult, queryAndFun
+from .shared import queryAndTemplate, queryHasResult, queryAndFun, queryHasResultWithConnection
 from datetime import datetime
 import time
 from app.shared.login import Role, login_required
@@ -77,7 +77,8 @@ def removeTheater():
                 #verifico se ci sono spettacoli collegati
                 sel = select([movieSchedule]).\
                         where( movieSchedule.c.theater == bindparam('id'))
-                if queryHasResult(sel, {'id' : id}, conn = conn):
+                if queryHasResultWithConnection(sel, conn, {'id' : id}):
+
                     #verifico se gli spettacoli collegati sono futuri
                     sel = select([movieSchedule]).\
                             where( 
@@ -86,10 +87,11 @@ def removeTheater():
                                     movieSchedule.c.dateTime >= datetime.today()
                                 )
                             )
-                    if queryHasResult(sel, {'id' : id}, conn = conn):
+                    if queryHasResultWithConnection(sel, conn, {'id' : id}):
                         #non posso cancellare
                         flash(  """Non si può rimuovere la sala {} perchè ci sono proiezioni non ancora andate in onda.\n
                                     Riassegna le proiezioni ad un altra sala. """.format(id), 'error')
+                        raise
                     else:    
                         #devo mettere non disponibile
                         up = theaters.update().\
@@ -107,14 +109,15 @@ def removeTheater():
                     flash("Sala rimossa!", 'info')
                     conn.execute(rm, {'id' : id} )
                     trans.commit()
-
-                    ret = redirect(url_for('listTheaters'))    
+                    ret = redirect(url_for('listTheaters')) 
             except:
                 trans.rollback()
-                resp = redirect(url_for('removeTheater'))    
+                ret = redirect(url_for('removeTheater')) 
             finally:
                 conn.close()
                 trans.close()
+                return ret
+
 
         else:
             flash('You have to insert the value to remove', 'error')

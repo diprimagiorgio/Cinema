@@ -1,14 +1,6 @@
 from sqlalchemy import Table, Column, Integer, String, Float, Date, ForeignKey, CheckConstraint, UniqueConstraint, DateTime, Boolean, column
 from app import metadata, engineAdmin
 import datetime
-
-
-
-from sqlalchemy import event, DDL
-
-
-
-    
     
 #--------tabella
 users = Table( 'users', metadata,
@@ -62,7 +54,7 @@ movieSchedule = Table('movieSchedule', metadata,
                     Column('dateTime',DateTime,nullable = False),
                     Column('price', Float, nullable = False),
                     Column('idMovie', None, ForeignKey('movies.id', onupdate="CASCADE", ondelete="NO ACTION" ), nullable = False),
-                    Column('theater', None, ForeignKey(column='theaters.id', onupdate="CASCADE", ondelete="SET NULL"), nullable = False),#,  nullable = False) perchè se voglio cancellare un theater ...
+                    Column('theater', None, ForeignKey(column='theaters.id', onupdate="CASCADE", ondelete="SET NULL"), nullable = False),
                     CheckConstraint(column('price') >= 0, name='price_ms_0')     
                 )
 
@@ -79,21 +71,3 @@ booking = Table('booking', metadata,
 
 metadata.create_all(engineAdmin)
 #----------fine tabella
-
-
-
-
-
-
-
-
-#trigger = DDL(
-#    "CREATE TRIGGER ins_Admin AFTER INSERT ON managers"
-#    "FOR EACH ROW "
-#    "WHEN (1 < (SELECT COUNT(NEW.admin) FROM managers WHERE admin == true))"
-#    "BEGIN SET NEW.admin=false; END"
-#)
-
-
-
-

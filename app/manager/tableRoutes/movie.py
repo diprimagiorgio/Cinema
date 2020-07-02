@@ -1,8 +1,8 @@
 from app import app
 from sqlalchemy import insert, select, outerjoin, delete, bindparam, and_
-from flask import  request, flash, redirect, url_for, render_template
+from flask import  request, flash, redirect, url_for, render_template, make_response
 from app.model import movies, genres, movieSchedule
-from .shared import queryAndTemplate, queryAndFun, queryHasResult
+from .shared import queryAndTemplate, queryAndFun, queryHasResult, queryHasResultWithConnection
 from datetime import datetime
 from app.shared.login import Role, login_required
 from app.engineFunc import choiceEngine
@@ -49,44 +49,61 @@ def insertMovie():
 """
 @app.route('/removeMovie', methods=['POST', 'GET'])
 @login_required(Role.SUPERVISOR)
-def removeMovie():                  
+def removeMovie():
     if request.method == 'POST':
         id = request.form.get('id')
         if id:
-            #verifico se ci sono spettacoli collegati
-            sel = select([movieSchedule]).\
-                    where( movieSchedule.c.idMovie == bindparam('id'))
-            if queryHasResult(sel, {'id' : id}):
-            #verifico se gli spettacoli collegati sono futuri
+            conn = choiceEngine()
+            conn = conn.execution_options( isolation_level="SERIALIZABLE" )
+            trans = conn.begin()
+            try:
+                #verifico se ci sono spettacoli collegati
                 sel = select([movieSchedule]).\
-                        where( 
-                            and_(
-                                movieSchedule.c.idMovie == bindparam('id'),
-                                movieSchedule.c.dateTime >= datetime.today()
+                        where( movieSchedule.c.idMovie == bindparam('id'))
+                if queryHasResultWithConnection(sel, conn, {'id' : id}):
+                #verifico se gli spettacoli collegati sono futuri
+                    sel = select([movieSchedule]).\
+                            where( 
+                                and_(
+                                    movieSchedule.c.idMovie == bindparam('id'),
+                                    movieSchedule.c.dateTime >= datetime.today()
+                                )
                             )
-                        )
-                if queryHasResult(sel, {'id' : id}):
-                    #non posso cancellare
-                    flash(  """Non si può rimuovere il film perchè ci sono proiezioni non ancora andate in onda.\n
-                                Riassegna le proiezioni ad un altro film. """, 'error')
-                else:    
-                    #devo mettere non disponibile
-                    up = movies.update().\
-                        where(movies.c.id == bindparam('t_id')).\
-                        values(available = False)
-                    flash("Film DISABILITATO!", 'info')
-                    return queryAndFun(up, 'listMovies', {'t_id' : id})
-            else:
-                #posso cancellarlo
-                rm = movies.delete().\
-                    where(movies.c.id == bindparam('id'))
-                flash("Film rimossa!", 'info')
-                return queryAndFun(rm, 'listMovies', {'id' : id})
+                    if queryHasResultWithConnection(sel, conn, {'id' : id}):
+                        #non posso cancellare
+                        flash(  """Non si può rimuovere il film perchè ci sono proiezioni non ancora andate in onda.\n
+                                    Riassegna le proiezioni ad un altro film. """, 'error')
+                        raise
+                    else:    
+                        #devo mettere non disponibile
+                        up = movies.update().\
+                            where(movies.c.id == bindparam('t_id')).\
+                            values(available = False)
+                        flash("Film DISABILITATO!", 'info')
+                        conn.execute(up, {'t_id' : id} )
+                        trans.commit()
+                        ret = redirect(url_for('listMovies'))
+                else:
+                    #posso cancellarlo
+                    rm = movies.delete().\
+                        where(movies.c.id == bindparam('id'))
+                    flash("Film rimossa!", 'info')
+                    conn.execute(rm, {'id' : id} )
+                    trans.commit()
+                    ret = redirect(url_for('listMovies'))
+            except:
+                trans.rollback()
+                ret = redirect(url_for('removeMovie'))
+            finally:
+                conn.close()
+                trans.close()
+                return ret
+
         
         else:    
             flash('Inserisci tutti i dati richiesti', 'error')
 
-    s = select([movies])
+    s = select([movies]).where(movies.c.available == True )
     return queryAndTemplate(s, '/tables/movie/removeMovie.html')
 #---------------------------------UPDATE---------------------------------#
 

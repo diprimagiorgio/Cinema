@@ -5,12 +5,20 @@ from app.engineFunc import choiceEngine, engineAdmin
 #file Diprima Giorgio
 
 
-def queryHasResult(q, args = None, conn = engineAdmin.connect()):
+def queryHasResult(q, args = None):
+    conn = choiceEngine()
     if args:
         result = conn.execute(q, args).fetchone()
     else:
         result = conn.execute(q).fetchone()
     conn.close()
+    return True if result else False
+
+def queryHasResultWithConnection(q,  conn , args = None):
+    if args:
+        result = conn.execute(q, args).fetchone()
+    else:
+        result = conn.execute(q).fetchone()
     return True if result else False
 
 def queryAndTemplate(s, htmlTemplate, otherPar=""):
