@@ -1,7 +1,7 @@
 from flask import  render_template, make_response, request, flash, redirect
 from flask_login import LoginManager, UserMixin, current_user, login_user
 from sqlalchemy import select, func
-from app.model import clients, users
+from app.model import clients, users, booking, movieSchedule, movies, genres
 from app import app
 from app.shared.login import Role, login_required
 from app.engineFunc import choiceEngine
@@ -42,3 +42,23 @@ def change1():
         return redirect("/updateCredit")
     else:
         return render_template("/user/logged/updateCredit.html")
+    
+#mi permette di visualizzare per il cliente loggato il numero di film prenotati per genere
+@app.route("/numeroFilmPrenotatiPerGenere")
+@login_required(Role.CLIENT)
+def soldispesi():
+    conn = choiceEngine()
+    
+    ris = select([func.count(booking.c.id).label('count'),genres.c.description]).\
+        select_from(
+            booking.join(movieSchedule, booking.c.idmovieSchedule == movieSchedule.c.id).\
+            join(movies, movieSchedule.c.idMovie == movies.c.id).\
+            join(genres, movies.c.idGenre == genres.c.id)).\
+        where(current_user.get_id()== booking.c.clientUsername).\
+        group_by(movies.c.idGenre,genres.c.description).\
+        order_by(func.count(booking.c.id).desc())
+        
+    y = conn.execute(ris).fetchall()
+    
+    conn.close()
+    return render_template("/user/logged/visualizzazioni.html", fav= y)

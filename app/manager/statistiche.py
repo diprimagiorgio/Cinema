@@ -1,4 +1,4 @@
-from flask import redirect, render_template, request, make_response, url_for, flash
+from flask import redirect, render_template, request, url_for, make_response
 from sqlalchemy import select, join, and_, func ,bindparam, between
 from app.model import users, movies, genres, movieSchedule, theaters, clients, managers, booking
 import datetime
@@ -11,7 +11,7 @@ from app.engineFunc import choiceEngine
 from sqlalchemy.sql.functions import now
 
 @app.route("/statistiche1")
-@login_required(Role.SUPERVISOR)
+@login_required(Role.ADMIN)
 def statistiche1():
     return render_template("/manager/statistiche/statistiche1.html")
 
@@ -21,13 +21,19 @@ def statistiche1():
 @app.route("/numeroPrenotazioniPerGenere")
 @login_required(Role.ADMIN)
 def query1():
-    s = booking.join(movieSchedule, booking.c.idmovieSchedule == movieSchedule.c.id).\
-        join(movies, movieSchedule.c.idMovie == movies.c.id).\
-        join(genres,movies.c.idGenre == genres.c.id)
-    queryCount = select([genres.c.description,func.count(booking.c.id).label('numero'),func.avg(booking.c.viewerAge).label('avgAge')]).\
-        select_from(s).group_by(genres.c.description)
+                
+    queryCount =select([
+                          genres.c.description,
+                          func.count(booking.c.id).label('numero'),
+                          func.avg(booking.c.viewerAge).label('avgAge')]
+                      ).\
+              select_from(
+                genres.join(movies,genres.c.id == movies.c.idGenre,isouter =True).join(movieSchedule, movies.c.id == movieSchedule.c.idMovie, isouter = True).\
+                join(booking, movieSchedule.c.id == booking.c.idmovieSchedule, isouter = True)).\
+                group_by(genres.c.id).order_by(func.count(booking.c.id).desc())
     conn = choiceEngine()
     ris1 = conn.execute(queryCount).fetchall()
+        
     conn.close()
     return render_template("/manager/statistiche/statGenere.html",numeroPrenotazioni = ris1)
 
@@ -38,13 +44,13 @@ def query1():
 def query2():
     conn = choiceEngine()
     #incasso per film
-    s = booking.join(movieSchedule, booking.c.idmovieSchedule == movieSchedule.c.id).\
-        join(movies, movieSchedule.c.idMovie == movies.c.id)
+    
         
     querynumeroPrenotazioni = select([movies.c.title,func.sum(movieSchedule.c.price).label('sum')]).\
-        select_from(s).\
-        group_by(movies.c.title).\
-        order_by(movies.c.title)
+        select_from(movies.join(movieSchedule, movies.c.id == movieSchedule.c.idMovie,isouter = True).\
+        join(booking, movieSchedule.c.id == booking.c.idmovieSchedule, isouter = True)).\
+        group_by(movies.c.title,movies.c.id).\
+        order_by(func.sum(movieSchedule.c.price).desc())
 
     ris = conn.execute(querynumeroPrenotazioni).fetchall()
     conn.close()
@@ -102,6 +108,15 @@ def query3():
     conn.close()
     return resp
     
-
-    
+#------------------DA COMPLETARE 
+@app.route("/occupazioneSala",methods=['GET','POST'])
+def occupazioneSala():
+    if request.method == 'POST':
+        conn = choiceEngine()
+        query = select([movies.c.id, movies.c.title]).\
+                    where(exists(select([movieSchedule.join(theaters, movieSchedule.c.theater == theaters.c.id)]).\
+                          where(and_(movies.c.id == movieSchedule.c.idMovie, (theaters.c.seatsCapacity / 100) * 75 < (select(count(booking.c.id).\
+                              where(booking.c.idmovieSchedule == movieSchedule.c.id)))))))
+        user = conn.execute(query).fetchone()
+        conn.close()
     

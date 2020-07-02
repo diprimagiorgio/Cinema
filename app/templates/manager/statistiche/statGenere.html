@@ -18,10 +18,16 @@
               <tbody>
                   {% for x in  numeroPrenotazioni%}
                       <tr>
-                          <th scope="row">{{ loop.index0 + 1 }}</th>
-                          <td>{{ x['description'] }}</td>
-                          <td>{{ x['numero'] }}</td>
-                          <td>{{ x['avgAge'] }}</td>
+                        <th scope="row">{{ loop.index0 + 1 }}</th>
+                        <td>{{ x['description'] }}</td>
+                        <td>{{ x['numero'] }}</td>
+                            {%if  x['avgAge']   %}
+                                 <td>{{ x['avgAge'] }}</td>
+                            {% else %}
+                            <td>Non disponibile</td>
+                            {% endif %}
+
+
 
                           
                       </tr>

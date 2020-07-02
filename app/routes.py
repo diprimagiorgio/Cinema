@@ -38,7 +38,7 @@ def logout():
 #Luca Bizzotto
 #registrazione manager
 @app.route('/registerManager',methods= ['GET','POST'])
-@login_required(Role.SUPERVISOR)
+@login_required(Role.ADMIN)
 def registerManager():
     if request.method == 'POST': 
         name = request.form.get("name")

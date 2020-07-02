@@ -17,9 +17,13 @@
               <tbody>
                   {% for x in  saldo%}
                       <tr>
-                          <th scope="row">{{ loop.index0 + 1 }}</th>
-                          <td>{{ x['title'] }}</td>
-                          <td>{{ x['sum'] }}</td>
+                        <th scope="row">{{ loop.index0 + 1 }}</th>
+                        <td>{{ x['title'] }}</td>
+                        {% if x['sum'] %}
+                            <td>{{ x['sum'] }}</td>
+                        {% else %}
+                            <td> 0.0 </td>
+                        {% endif %}
 
                           
                       </tr>
